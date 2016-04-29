@@ -1,0 +1,55 @@
+* architecture
+** server
+*** web server
+*** stores linear history
+*** initial thoughts
+**** it keeps list clients
+**** each client has position in revision history
+***** is this history linear? yes
+**** iterate over clients and send new operations
+** client
+*** parsing
+**** basic parsing done
+**** need to modify to send as Operation
+**** cursor position?
+*** output
+**** received text
+**** received cursor positions
+**** transform operations
+*** keep track of server
+** Operation
+*** JSON object
+*** send via socket.io
+*** data
+**** clientID
+**** cursorChange
+**** characters
+**** insertOrDelete?
+**** position (at which characters are inserted or deleted)
+* today
+** set up server-client communication
+** features:
+*** empty Operation objects
+*** use socket.io
+**** uses node.js server
+**** opens and closes sockets on server
+**** actually, what does it offer beyond node.js?
+*** queue of recent Operations
+*** two types threads
+**** greeter callback function
+***** upon receipt of new client Operation, push onto queue
+**** main function
+loop:
+  pull Operation off queue
+  broadcast to clients
+
+**** broadcaster thread
+***** one per client
+***** stores client's current queue position
+***** loop { send next Operation }
+***** ignore memory considerations for now
+*** store document
+** pseudocode
+*** server
+**** greeter thread
+- initialize 
