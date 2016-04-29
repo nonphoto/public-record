@@ -1,10 +1,9 @@
-var http = require('http');
+var express = require('express');
 
-var server = http.createServer(function(request, response) {
-	response.writeHead(200, {'Content-Type': 'text/plain'});
-  response.end('Hello\n');
-});
+var server = express();
+server.use(express.static(__dirname + '/client'));
 
-server.listen(8000, function() {
-    console.log((new Date()) + ' Server is listening on port 8000');
+var port = 8000;
+server.listen(port, function() {
+    console.log('server listening on port ' + port);
 });
