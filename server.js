@@ -1,25 +1,23 @@
 var express = require('express');
-var WebSocketServer = require('websocket').server;
+var http = require("http");
+var WebSocketServer = require('ws').Server;
 
 var port = 8000;
 var clients = {};
 
-var server = express();
-server.use(express.static(__dirname + '/client'));
+var app = express();
+app.use(express.static(__dirname + '/client'));
+
+var server = http.createServer(app)
 server.listen(port, function() {
 	console.log('Server listening on port ' + port);
 });
 
-var client = new WebSocketServer({
-	httpServer: server,
-	host: '127.0.0.1',
-	port: 8000
-});
+var socket = new WebSocketServer({server: server});
+socket.on('connection', function(client) {
+  console.log('Client connected');
 
-client.on('request', function(r) {
-	console.log('Socket connected');
-	var connection = r.accept('echo-protocol', r.origin);
-	connection.on('message', function(message) {
-		console.log(message);
-	});
+  client.on('close', function() {
+    console.log('Client disconnected');
+  });
 });
