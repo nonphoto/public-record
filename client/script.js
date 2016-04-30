@@ -7,6 +7,23 @@ window.onload = function() {
 		diff(oldValue, newValue);
 		oldValue = newValue;
 	};
+
+	client = new WebSocket('ws://localhost:8000/', 'echo-protocol');
+	client.onerror = function() {
+		console.log('Connection error');
+	};
+	client.onopen = function() {
+		console.log('Client connected');
+		client.send('hey');
+	};
+	client.onclose = function() {
+		console.log('Client closed');
+	};
+	client.onmessage = function(e) {
+		if (typeof e.data === 'string') {
+			console.log("Received: '" + e.data + "'");
+		}
+	};
 };
 
 function diff(a, b) {
