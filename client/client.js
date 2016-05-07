@@ -1,3 +1,5 @@
+var client = null;
+var name = -1;
 var oldValue = "";
 
 window.onload = function() {
@@ -13,8 +15,7 @@ window.onload = function() {
 		console.log('Connection error');
 	};
 	client.onopen = function() {
-		console.log('Client connected');
-		client.send('hey');
+		console.log('Client opened');
 	};
 	client.onclose = function() {
 		console.log('Client closed');
@@ -22,18 +23,43 @@ window.onload = function() {
 	client.onmessage = function(e) {
 		if (typeof e.data === 'string') {
 			console.log("Received: '" + e.data + "'");
+			var message = JSON.parse(e.data);
+			if (message.hasOwnProperty('assign')) {
+				name = message.assign;
+			}
+			else if (message.name != name) {
+				var s = editor.value;
+				s = s.slice(0, message.position) + message.insert + s.slice(message.position + message.delete);
+				editor.value = s;
+			}
 		}
 	};
 };
 
 function diff(a, b) {
+	i = 0;
 	while(a.charAt(0) == b.charAt(0) && a.length > 0 && b.length > 0) {
 		a = a.slice(1);
 		b = b.slice(1);
+		i++;
 	}
+
+	j = 0;
 	while(a.slice(-1) == b.slice(-1) && a.length > 0 && b.length > 0) {
 		a = a.slice(0, -1);
 		b = b.slice(0, -1);
+		j++;
 	}
-	console.log("deleted: " + a + "\ninserted: " + b);
+
+	result = {
+		name: name,
+		position: i,
+		delete: a.length,
+		insert: b
+	}
+	console.log(result);
+
+	if (name >= 0) {
+		client.send(JSON.stringify(result));
+	}
 }
