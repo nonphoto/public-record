@@ -3,7 +3,8 @@ var http = require("http");
 var WebSocketServer = require('ws').Server;
 
 var port = 8000;
-var clients = [];
+var clients = {};
+var nextName = 0;
 
 var app = express();
 app.use(express.static(__dirname + '/client'));
@@ -15,15 +16,10 @@ server.listen(port, function() {
 
 var socket = new WebSocketServer({server: server});
 socket.on('connection', function(client) {
-	console.log('Client connected');
-
-	client.send(JSON.stringify({
-		assign: clients.length
-	}));
 
 	client.on('close', function() {
-		console.log('Client disconnected');
-		// Remove client from client list
+		console.log('Client ' + this.name + ' disconnected');
+		delete clients[this.name];
 	});
 
 	client.on('message', function(data, flags) {
@@ -33,5 +29,13 @@ socket.on('connection', function(client) {
 		}
 	});
 
-	clients.push(client);
+	client.name = nextName.toString(16);
+	console.log('Client ' + client.name + ' connected');
+	nextName++;
+
+	client.send(JSON.stringify({
+		assign: client.name
+	}));
+
+	clients[client.name] = client;
 });
