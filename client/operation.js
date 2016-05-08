@@ -299,3 +299,9 @@ var Operation = function(other) {
 		}
 	}
 }
+
+if (typeof module !== 'undefined') {
+	module.exports = {
+		Operation: Operation
+	}
+}

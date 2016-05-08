@@ -41,11 +41,13 @@ window.onload = function() {
 			var message = JSON.parse(e.data);
 			if (message.hasOwnProperty('assign')) {
 				name = message.assign;
+				editor.value = message.text;
+				oldValue = editor.value;
 			}
 			else if (message.source != name) {
-				var op = new Operation(message.ops);
+				var operation = new Operation(message.ops);
 
-				editor.value = op.apply(editor.value);
+				editor.value = operation.apply(editor.value);
 				oldValue = editor.value;
 			}
 		}
