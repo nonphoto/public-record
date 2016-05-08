@@ -4,13 +4,21 @@ s = "0123456789"
 
 var client = null;
 var editor = null;
-var name = -1;
+var name = null;
 var oldValue = "";
 
 window.onload = function() {
 	editor = document.getElementById('editor');
 	editor.oninput = function() {
-		diff(oldValue, editor.value);
+		var operation = diff(oldValue, editor.value);
+		console.log(operation);
+		if (name) {
+			var message = {
+				ops: operation.ops,
+				source: name
+			}
+			client.send(JSON.stringify(message));
+		}
 		oldValue = editor.value;
 	};
 
@@ -59,10 +67,5 @@ function diff(a, b) {
 		j++;
 	}
 
-	var message = {}
-	message.ops = new Operation().retain(i).delete(a.length).insert(b).retain(j).ops;
-	if (name >= 0) {
-		message.source = name;
-		client.send(JSON.stringify(message));
-	}
+	return new Operation().retain(i).delete(a.length).insert(b).retain(j);
 };
