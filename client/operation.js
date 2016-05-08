@@ -1,4 +1,4 @@
-var Operation = function() {
+var Operation = function(other) {
 	this.ops = [];
 	this.sourceLength = 0;
 	this.targetLength = 0;
@@ -15,65 +15,65 @@ var Operation = function() {
 		return typeof op === 'number' && op < 0;
 	};
 
-  this.retain = function (n) {
-    if (typeof n !== 'number') {
-      throw new Error('Expected number');
-    }
-    if (n === 0) {
+	this.retain = function (n) {
+		if (typeof n !== 'number') {
+			throw new Error('Expected number');
+		}
+		if (n === 0) {
 			return this;
 		}
-    this.sourceLength += n;
-    this.targetLength += n;
-    if (isRetain(this.ops[this.ops.length - 1])) {
-      this.ops[this.ops.length - 1] += n;
-    } else {
-      this.ops.push(n);
-    }
-    return this;
-  };
+		this.sourceLength += n;
+		this.targetLength += n;
+		if (isRetain(this.ops[this.ops.length - 1])) {
+			this.ops[this.ops.length - 1] += n;
+		} else {
+			this.ops.push(n);
+		}
+		return this;
+	};
 
-  this.insert = function (s) {
-    if (typeof s !== 'string') {
-      throw new Error('Expected string');
-    }
-    if (s === '') {
+	this.insert = function (s) {
+		if (typeof s !== 'string') {
+			throw new Error('Expected string');
+		}
+		if (s === '') {
 			return this;
 		}
-    this.targetLength += s.length;
-    if (isInsert(this.ops[this.ops.length - 1])) {
-      this.ops[this.ops.length - 1] += s;
-    }
+		this.targetLength += s.length;
+		if (isInsert(this.ops[this.ops.length - 1])) {
+			this.ops[this.ops.length - 1] += s;
+		}
 		else if (isDelete(this.ops[this.ops.length - 1])) {
-      if (isInsert(this.ops[this.ops.length - 2])) {
-        this.ops[this.ops.length - 2] += s;
-      } else {
-        this.ops[this.ops.length] = this.ops[this.ops.length - 1];
-        this.ops[this.ops.length - 2] = s;
-      }
-    } else {
-      this.ops.push(s);
-    }
-    return this;
-  };
+			if (isInsert(this.ops[this.ops.length - 2])) {
+				this.ops[this.ops.length - 2] += s;
+			} else {
+				this.ops[this.ops.length] = this.ops[this.ops.length - 1];
+				this.ops[this.ops.length - 2] = s;
+			}
+		} else {
+			this.ops.push(s);
+		}
+		return this;
+	};
 
-  this.delete = function (n) {
-    if (typeof n !== 'number') {
-      throw new Error('Expected number');
-    }
-    if (n === 0) {
+	this.delete = function (n) {
+		if (typeof n !== 'number') {
+			throw new Error('Expected number');
+		}
+		if (n === 0) {
 			return this;
 		}
-    if (n > 0) {
+		if (n > 0) {
 			n = -n;
 		}
-    this.sourceLength -= n;
-    if (isDelete(this.ops[this.ops.length - 1])) {
-      this.ops[this.ops.length - 1] += n;
-    } else {
-      this.ops.push(n);
-    }
-    return this;
-  };
+		this.sourceLength -= n;
+		if (isDelete(this.ops[this.ops.length - 1])) {
+			this.ops[this.ops.length - 1] += n;
+		} else {
+			this.ops.push(n);
+		}
+		return this;
+	};
 
 	this.apply = function(s) {
 		if (s.length !== this.sourceLength) {
@@ -283,4 +283,19 @@ var Operation = function() {
 		}
 		return [thisprime, thatprime];
 	};
+
+	if (other) {
+		for (var i = 0, l = other.length; i < l; i++) {
+			var op = other[i];
+			if (isRetain(op)) {
+				this.retain(op);
+			} else if (isInsert(op)) {
+				this.insert(op);
+			} else if (isDelete(op)) {
+				this.delete(op);
+			} else {
+				throw new Error("Unknown operation: " + JSON.stringify(op));
+			}
+		}
+	}
 }

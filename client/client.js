@@ -9,25 +9,24 @@ var oldValue = "";
 
 window.onload = function() {
 	editor = document.getElementById('editor');
-	var checkEditor = function() {
+	editor.oninput = function() {
 		diff(oldValue, editor.value);
 		oldValue = editor.value;
 	};
-
-	editor.onkeyup = checkEditor;
-	editor.onmouseup = checkEditor;
-	editor.ondragend = checkEditor;
 
 	client = new WebSocket('ws://localhost:8000/', 'echo-protocol');
 	client.onerror = function() {
 		console.log('Connection error');
 	};
+
 	client.onopen = function() {
 		console.log('Client opened');
 	};
+
 	client.onclose = function() {
 		console.log('Client closed');
 	};
+
 	client.onmessage = function(e) {
 		if (typeof e.data === 'string') {
 			console.log("Received: '" + e.data + "'");
@@ -35,10 +34,11 @@ window.onload = function() {
 			if (message.hasOwnProperty('assign')) {
 				name = message.assign;
 			}
-			else if (message.name != name) {
-				var s = editor.value;
-				s = s.slice(0, message.position) + message.insert + s.slice(message.position + message.delete);
-				editor.value = s;
+			else if (message.source != name) {
+				var op = new Operation(message.ops);
+
+				editor.value = op.apply(editor.value);
+				oldValue = editor.value;
 			}
 		}
 	};
@@ -46,28 +46,23 @@ window.onload = function() {
 
 function diff(a, b) {
 	i = 0;
-	while(a.charAt(0) == b.charAt(0) && a.length > 0 && b.length > 0) {
+	while (a.charAt(0) == b.charAt(0) && a.length > 0 && b.length > 0) {
 		a = a.slice(1);
 		b = b.slice(1);
 		i++;
 	}
 
 	j = 0;
-	while(a.slice(-1) == b.slice(-1) && a.length > 0 && b.length > 0) {
+	while (a.slice(-1) == b.slice(-1) && a.length > 0 && b.length > 0) {
 		a = a.slice(0, -1);
 		b = b.slice(0, -1);
 		j++;
 	}
 
-	result = {
-		name: name,
-		position: i,
-		delete: a.length,
-		insert: b
-	}
-	console.log(result);
-
+	var message = {}
+	message.ops = new Operation().retain(i).delete(a.length).insert(b).retain(j).ops;
 	if (name >= 0) {
-		client.send(JSON.stringify(result));
+		message.source = name;
+		client.send(JSON.stringify(message));
 	}
-}
+};

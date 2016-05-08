@@ -24,8 +24,8 @@ socket.on('connection', function(client) {
 
 	client.on('message', function(data, flags) {
 		console.log(data);
-		for (var i = 0; i < clients.length; i++) {
-			clients[i].send(data);
+		for (var k in clients) {
+			clients[k].send(data);
 		}
 	});
 
