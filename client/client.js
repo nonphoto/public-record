@@ -1,3 +1,7 @@
+var op1 = new Operation().retain(3).insert('abc').delete(5).retain(2).insert('ijkl');
+var op2 = new Operation().retain(2).delete(3).insert('def').retain(5).insert('gh').retain(2);
+s = "0123456789"
+
 var client = null;
 var editor = null;
 var name = -1;
