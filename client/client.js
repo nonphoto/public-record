@@ -1,14 +1,18 @@
 var client = null;
+var editor = null;
 var name = -1;
 var oldValue = "";
 
 window.onload = function() {
-	var editor = document.getElementById("editor");
-	editor.oninput = function() {
-		var newValue = editor.value;
-		diff(oldValue, newValue);
-		oldValue = newValue;
+	editor = document.getElementById('editor');
+	var checkEditor = function() {
+		diff(oldValue, editor.value);
+		oldValue = editor.value;
 	};
+
+	editor.onkeyup = checkEditor;
+	editor.onmouseup = checkEditor;
+	editor.ondragend = checkEditor;
 
 	client = new WebSocket('ws://localhost:8000/', 'echo-protocol');
 	client.onerror = function() {
