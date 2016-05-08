@@ -39,6 +39,7 @@ socket.on('connection', function(client) {
 	nextName++;
 
 	client.send(JSON.stringify({
+		type: 'init',
 		assign: client.name,
 		text: text
 	}));

@@ -14,6 +14,7 @@ window.onload = function() {
 		console.log(operation);
 		if (name) {
 			var message = {
+				type: 'operation',
 				ops: operation.ops,
 				source: name
 			}
@@ -39,16 +40,21 @@ window.onload = function() {
 		if (typeof e.data === 'string') {
 			console.log("Received: '" + e.data + "'");
 			var message = JSON.parse(e.data);
-			if (message.hasOwnProperty('assign')) {
+			if (message.type === 'init') {
 				name = message.assign;
 				editor.value = message.text;
 				oldValue = editor.value;
 			}
-			else if (message.source != name) {
-				var operation = new Operation(message.ops);
+			else if (message.type === 'operation') {
+				if (message.source != name) {
+					var operation = new Operation(message.ops);
 
-				editor.value = operation.apply(editor.value);
-				oldValue = editor.value;
+					editor.value = operation.apply(editor.value);
+					oldValue = editor.value;
+				}
+			}
+			else {
+				console.log('Unrecognized message type');
 			}
 		}
 	};
