@@ -4,7 +4,9 @@ s = "0123456789"
 
 var client = null;
 var editor = null;
-var name = null;
+var name = "";
+var active = null;
+var buffer = null;
 var oldValue = "";
 
 window.onload = function() {
@@ -13,12 +15,18 @@ window.onload = function() {
 		var operation = diff(oldValue, editor.value);
 		console.log(operation);
 		if (name) {
-			var message = {
-				type: 'operation',
-				ops: operation.ops,
-				source: name
+			if (active) {
+				if (buffer) {
+					buffer.compose(operation);
+				}
+				else {
+					buffer = operation;
+				}
 			}
-			client.send(JSON.stringify(message));
+			else {
+				active = operation;
+				sendOperation(active);
+			}
 		}
 		oldValue = editor.value;
 	};
@@ -46,11 +54,37 @@ window.onload = function() {
 				oldValue = editor.value;
 			}
 			else if (message.type === 'operation') {
-				if (message.source != name) {
+				if (message.source == name) {
+					if (active) {
+						if (buffer) {
+							active = buffer;
+							buffer = null;
+							sendOperation(active);
+						}
+						else {
+							active = null;
+						}
+					}
+				}
+				else {
 					var operation = new Operation(message.ops);
-
-					editor.value = operation.apply(editor.value);
-					oldValue = editor.value;
+					if (active) {
+						if (buffer) {
+							var t1 = active.transform(operation);
+							var t2 = buffer.transform(t1[1]);
+							applyOperation(t2[1]);
+							active = t1[0];
+							buffer = t2[0];
+						}
+						else {
+							var t = active.transform(operation);
+							applyOperation(t[1]);
+							active = t[0];
+						}
+					}
+					else {
+						applyOperation(operation);
+					}
 				}
 			}
 			else {
@@ -77,3 +111,17 @@ function diff(a, b) {
 
 	return new Operation().retain(i).delete(a.length).insert(b).retain(j);
 };
+
+function sendOperation(operation) {
+	var message = {
+		type: 'operation',
+		ops: operation.ops,
+		source: name
+	}
+	client.send(JSON.stringify(message));
+}
+
+function applyOperation(operation) {
+	editor.value = operation.apply(editor.value);
+	oldValue = editor.value;
+}
