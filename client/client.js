@@ -23,10 +23,9 @@ window.onload = function() {
 		oldValue = editor.value;
 	};
 
-	editor.onkeypress = function(e) {
-		if (e.keyCode == 13) {
+	editor.onkeydown = function(e) {
+		if (e.keyCode == 13 && e.metaKey) {
 			sendUpdates();
-			return false;
 		}
 	};
 
