@@ -31,7 +31,7 @@ window.onload = function() {
 		oldValue = editor.value;
 	};
 
-	client = new WebSocket('ws://public-record.herokuapp.com', 'echo-protocol');
+	client = new WebSocket(location.origin.replace(/^http/, 'ws'));
 	client.onerror = function() {
 		console.log('Connection error');
 	};
