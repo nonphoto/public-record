@@ -19,6 +19,9 @@ window.onload = function() {
 		else {
 			buffer = operation;
 		}
+		if (document.getElementById('checkbox').checked) {
+			sendUpdates();
+		}
 		console.log(buffer);
 		oldValue = editor.value;
 	};
@@ -55,6 +58,9 @@ window.onload = function() {
 				if (message.source == name) {
 					if (active) {
 						active = false;
+						if (document.getElementById('checkbox').checked) {
+							sendUpdates();
+						}
 					}
 				}
 				else {

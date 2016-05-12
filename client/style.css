@@ -9,8 +9,8 @@ body {
 
 textarea {
 	resize: none;
-	font-size: 16pt;
 	border: none;
+	font-size: 16pt;
 	width: 60%;
 	height: 100vh;
 	margin: 0 20%;
@@ -18,5 +18,10 @@ textarea {
 }
 
 textarea:focus{
-    outline: none;
+	outline: none;
+}
+
+input {
+	position: fixed;
+	margin: 1rem;
 }
