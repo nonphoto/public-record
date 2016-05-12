@@ -24,7 +24,7 @@ window.onload = function() {
 	};
 
 	editor.onkeydown = function(e) {
-		if (e.keyCode == 13 && e.metaKey) {
+		if (e.keyCode == 13 && (e.metaKey || e.ctrlKey)) {
 			sendUpdates();
 		}
 	};
