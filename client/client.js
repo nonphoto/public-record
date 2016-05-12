@@ -29,7 +29,8 @@ window.onload = function() {
 		}
 	};
 
-	client = new WebSocket(location.origin.replace(/^http/, 'ws'));
+	// var address = location.origin.replace(/^http/, 'ws');
+	client = new WebSocket('wss://public-record.herokuapp.com');
 	client.onerror = function() {
 		console.log('Connection error');
 	};
