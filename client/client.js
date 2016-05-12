@@ -41,19 +41,20 @@ window.onload = function() {
 
 	client.onclose = function() {
 		console.log('Client closed');
+		hideSpinner();
 	};
 
 	client.onmessage = function(e) {
 		if (typeof e.data === 'string') {
 			var message = JSON.parse(e.data);
 			console.log(message);
+			time = Math.max(time, message.time);
 			if (message.type === 'init') {
 				name = message.assign;
 				editor.value = message.text;
 				oldValue = editor.value;
 			}
 			else if (message.type === 'operation') {
-				time = Math.max(time, message.time);
 				if (message.source == name) {
 					if (active) {
 						hideSpinner();
