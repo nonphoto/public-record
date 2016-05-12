@@ -37,11 +37,11 @@ socket.on('connection', function(client) {
 					message.ops = operation.ops;
 				}
 			}
+			operations.push(operation);
 			message.time = operations.length;
 			for (var k in clients) {
 				clients[k].send(JSON.stringify(message));
 			}
-			operations.push(operation);
 			text = operation.apply(text);
 		}
 	});
@@ -53,6 +53,7 @@ socket.on('connection', function(client) {
 	client.send(JSON.stringify({
 		type: 'init',
 		assign: client.name,
+		time: operations.length,
 		text: text
 	}));
 

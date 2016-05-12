@@ -52,7 +52,7 @@ window.onload = function() {
 				oldValue = editor.value;
 			}
 			else if (message.type === 'operation') {
-				time = Math.max(time, message.time + 1);
+				time = Math.max(time, message.time);
 				if (message.source == name) {
 					if (active) {
 						active = false;
