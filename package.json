@@ -1,0 +1,11 @@
+{
+	"name": "public-record",
+	"description": "Collaborative text editor",
+	"main": "server.js",
+	"scripts": {
+		"start": "node server.js"
+	},
+	"engines": {
+		"node": "6.1.0"
+	}
+}
