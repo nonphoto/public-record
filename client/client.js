@@ -1,6 +1,7 @@
 var client = null;
 var editor = null;
 var name = "";
+var time = 0;
 var active = null;
 var buffer = null;
 var oldValue = "";
@@ -51,6 +52,7 @@ window.onload = function() {
 				oldValue = editor.value;
 			}
 			else if (message.type === 'operation') {
+				time = Math.max(time, message.time + 1);
 				if (message.source == name) {
 					if (active) {
 						active = false;
@@ -120,6 +122,7 @@ function sendOperation(operation) {
 	var message = {
 		type: 'operation',
 		ops: operation.ops,
+		time: time,
 		source: name
 	}
 	client.send(JSON.stringify(message));
