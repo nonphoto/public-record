@@ -3,6 +3,7 @@ var http = require('http');
 var WebSocketServer = require('ws').Server;
 var Operation = require('./client/operation').Operation;
 
+var port = process.env.PORT || 8000
 var clients = {};
 var nextName = 0;
 var text = '';
@@ -11,7 +12,7 @@ var app = express();
 app.use(express.static(__dirname + '/client'));
 
 var server = http.createServer(app)
-server.listen(process.env.PORT || 8000, function() {
+server.listen(port, function() {
 	console.log('Server listening on port ' + port);
 });
 
