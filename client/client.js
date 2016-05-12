@@ -1,5 +1,6 @@
 var client = null;
 var editor = null;
+var auto = false;
 var name = "";
 var time = 0;
 var active = null;
@@ -7,6 +8,12 @@ var buffer = null;
 var oldValue = "";
 
 window.onload = function() {
+	var toggle = document.getElementById('toggle');
+	toggle.onclick = function() {
+		auto = !auto;
+		this.classList.toggle('selected');
+	}
+
 	editor = document.getElementById('editor');
 	editor.oninput = function() {
 		var operation = diff(oldValue, editor.value);
@@ -16,7 +23,7 @@ window.onload = function() {
 		else {
 			buffer = operation;
 		}
-		if (document.getElementById('checkbox').checked) {
+		if (auto) {
 			sendUpdates();
 		}
 		console.log(buffer);
@@ -37,11 +44,12 @@ window.onload = function() {
 
 	client.onopen = function() {
 		console.log('Client opened');
+		spinBlue();
 	};
 
 	client.onclose = function() {
 		console.log('Client closed');
-		hideSpinner();
+		spinRed();
 	};
 
 	client.onmessage = function(e) {
@@ -57,9 +65,9 @@ window.onload = function() {
 			else if (message.type === 'operation') {
 				if (message.source == name) {
 					if (active) {
-						hideSpinner();
+						spinStop();
 						active = false;
-						if (document.getElementById('checkbox').checked) {
+						if (auto) {
 							sendUpdates();
 						}
 					}
@@ -118,7 +126,7 @@ function sendUpdates() {
 		active = buffer;
 		buffer = null;
 		sendOperation(active);
-		showSpinner();
+		spinStart();
 	}
 };
 
@@ -138,10 +146,20 @@ function applyOperation(operation) {
 	oldValue = editor.value;
 };
 
-function showSpinner() {
-	document.getElementById('spinner').style.display = 'block';
+function spinStart() {
+	document.getElementById('spinner').style.animationName = 'spin';
 }
 
-function hideSpinner() {
-	document.getElementById('spinner').style.display = 'none';
+function spinStop() {
+	document.getElementById('spinner').style.animationName = 'none';
+}
+
+function spinBlue() {
+	document.getElementById('spinner').style.stroke = '#419bf9';
+	document.getElementById('toggle').style.borderColor = '#419bf9';
+}
+
+function spinRed() {
+	document.getElementById('spinner').style.stroke = 'red';
+	document.getElementById('toggle').style.borderColor = 'red';
 }
