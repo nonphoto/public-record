@@ -25,3 +25,22 @@ input {
 	position: fixed;
 	margin: 1rem;
 }
+
+svg {
+    display: none;
+		position: fixed;
+		margin: 1rem;
+		margin-left: 2rem;
+    width: 1rem;
+    height: 1rem;
+    stroke-width: 2px;
+		stroke: black;
+		animation-name: spin;
+		animation-duration: 0.5s;
+		animation-iteration-count: infinite;
+}
+
+@keyframes spin {
+    from {transform: rotate(0deg);}
+    to {transform: rotate(360deg);}
+}

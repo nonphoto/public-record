@@ -56,6 +56,7 @@ window.onload = function() {
 				time = Math.max(time, message.time);
 				if (message.source == name) {
 					if (active) {
+						hideSpinner();
 						active = false;
 						if (document.getElementById('checkbox').checked) {
 							sendUpdates();
@@ -116,6 +117,7 @@ function sendUpdates() {
 		active = buffer;
 		buffer = null;
 		sendOperation(active);
+		showSpinner();
 	}
 };
 
@@ -134,3 +136,11 @@ function applyOperation(operation) {
 	editor.value = operation.apply(editor.value);
 	oldValue = editor.value;
 };
+
+function showSpinner() {
+	document.getElementById('spinner').style.display = 'block';
+}
+
+function hideSpinner() {
+	document.getElementById('spinner').style.display = 'none';
+}
