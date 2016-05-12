@@ -1,3 +1,39 @@
+* presentation
+** what's the problem?
+*** we want to create a real-time collaborative document editor
+*** let's model this as just inserts and deletes in plain text
+*** requirements: (fiddle w/ this)
+**** collaboration in real time
+***** this means we can't just use locks, for example
+**** smooth user experience: local changes are applied immediately
+***** i.e., apply changes optimistically, resolve conflicts later
+**** client's documents should eventually converge
+** enter OT
+*** example
+**** David and Jonas both have documents with the text "go"
+**** say David enters 'a', Jonas enters 't' at the same time
+**** ...
+**** overall, this should be oriented around the diamond diagram
+         go
+      a /  \ t
+     goa    got
+**** if we decide that 'a' should occur before 't' (somehow smooth this), 
+then give the example solution here
+*** now generalize
+**** we've seen example of OT framework
+**** suppose a and b are examples of operations on document
+**** need to find a' and b' to complete the diamond
+**** this gives the spec for transform: xform(a,b) -> (a',b') s.t. ...
+** our project
+*** specs/priorities:
+**** web interface
+**** insert, delete
+*** things to talk about:
+**** parsing operations, taking diffs, etc.
+**** connecting clients to server, need to set up live websocket connection
+**** operation structure, composing operations, etc
+***** perhaps motivate by having multiple 
+** testing
 * architecture
 ** server
 *** web server
