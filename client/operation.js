@@ -113,7 +113,7 @@ var Operation = function(other) {
 		var i = 0, j = 0;
 		var a = this.ops[i++];
 		var b = that.ops[j++];
-		while (typeof a !== 'undefined' && typeof b !== 'undefined') {
+		while (typeof a !== 'undefined' || typeof b !== 'undefined') {
 			if (isDelete(a)) {
 				result.delete(a);
 				a = this.ops[i++];
@@ -201,7 +201,7 @@ var Operation = function(other) {
 		var a = this.ops[i++];
 		var b = that.ops[j++];
 		var minl;
-		while (typeof a === 'undefined' && typeof b === 'undefined') {
+		while (typeof a !== 'undefined' || typeof b !== 'undefined') {
 			if (isInsert(a)) {
 				thisprime.insert(a);
 				thatprime.retain(a.length);

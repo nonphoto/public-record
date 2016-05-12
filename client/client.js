@@ -13,22 +13,21 @@ window.onload = function() {
 	editor = document.getElementById('editor');
 	editor.oninput = function() {
 		var operation = diff(oldValue, editor.value);
-		console.log(operation);
-		if (name) {
-			if (active) {
-				if (buffer) {
-					buffer.compose(operation);
-				}
-				else {
-					buffer = operation;
-				}
-			}
-			else {
-				active = operation;
-				sendOperation(active);
-			}
+		if (buffer) {
+			buffer = buffer.compose(operation);
 		}
+		else {
+			buffer = operation;
+		}
+		console.log(buffer);
 		oldValue = editor.value;
+	};
+
+	editor.onkeypress = function(e) {
+		if (e.keyCode == 13) {
+			sendUpdates();
+			return false;
+		}
 	};
 
 	client = new WebSocket(location.origin.replace(/^http/, 'ws'));
@@ -46,8 +45,8 @@ window.onload = function() {
 
 	client.onmessage = function(e) {
 		if (typeof e.data === 'string') {
-			console.log("Received: '" + e.data + "'");
 			var message = JSON.parse(e.data);
+			console.log(message);
 			if (message.type === 'init') {
 				name = message.assign;
 				editor.value = message.text;
@@ -56,31 +55,27 @@ window.onload = function() {
 			else if (message.type === 'operation') {
 				if (message.source == name) {
 					if (active) {
-						if (buffer) {
-							active = buffer;
-							buffer = null;
-							sendOperation(active);
-						}
-						else {
-							active = null;
-						}
+						active = false;
 					}
 				}
 				else {
 					var operation = new Operation(message.ops);
-					if (active) {
-						if (buffer) {
-							var t1 = active.transform(operation);
-							var t2 = buffer.transform(t1[1]);
-							applyOperation(t2[1]);
-							active = t1[0];
-							buffer = t2[0];
-						}
-						else {
-							var t = active.transform(operation);
-							applyOperation(t[1]);
-							active = t[0];
-						}
+					if (active && buffer) {
+						var t1 = active.transform(operation);
+						var t2 = buffer.transform(t1[1]);
+						applyOperation(t2[1]);
+						active = t1[0];
+						buffer = t2[0];
+					}
+					else if (active) {
+						var t = active.transform(operation);
+						applyOperation(t[1]);
+						active = t[0];
+					}
+					else if (buffer) {
+						var t = buffer.transform(operation);
+						applyOperation(t[1]);
+						buffer = t[0];
 					}
 					else {
 						applyOperation(operation);
@@ -88,7 +83,7 @@ window.onload = function() {
 				}
 			}
 			else {
-				console.log('Unrecognized message type');
+				throw new Error('Unrecognized message type');
 			}
 		}
 	};
@@ -112,6 +107,14 @@ function diff(a, b) {
 	return new Operation().retain(i).delete(a.length).insert(b).retain(j);
 };
 
+function sendUpdates() {
+	if (buffer && name && !active) {
+		active = buffer;
+		buffer = null;
+		sendOperation(active);
+	}
+};
+
 function sendOperation(operation) {
 	var message = {
 		type: 'operation',
@@ -119,9 +122,10 @@ function sendOperation(operation) {
 		source: name
 	}
 	client.send(JSON.stringify(message));
-}
+	console.log(operation);
+};
 
 function applyOperation(operation) {
 	editor.value = operation.apply(editor.value);
 	oldValue = editor.value;
-}
+};
