@@ -7,7 +7,7 @@ body {
 	background-color: #eeeeee;
 }
 
-textarea {
+#editor {
 	resize: none;
 	border: none;
 	font-size: 16pt;
@@ -17,11 +17,39 @@ textarea {
 	padding: 5rem;
 }
 
-textarea:focus{
+#editor:focus{
 	outline: none;
 }
 
-input {
+#toggle {
+	box-sizing: border-box;
 	position: fixed;
-	margin: 1rem;
+	top: 1rem;
+	left: 1rem;
+	width: 2rem;
+	height: 2rem;
+	border-style: none;
+	border-width: 2px;
+	border-color: black;
+}
+
+#toggle.selected {
+	border-style: solid;
+}
+
+#spinner {
+	width: 50%;
+	height: 50%;
+margin: 25%;
+	display: block;
+	stroke-width: 2px;
+	stroke: black;
+	animation-name: none;
+	animation-duration: 0.5s;
+	animation-iteration-count: infinite;
+}
+
+@keyframes spin {
+	from {transform: rotate(0deg);}
+	to {transform: rotate(360deg);}
 }

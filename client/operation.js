@@ -192,7 +192,11 @@ var Operation = function(other) {
 
 	this.transform = function(that) {
 		if (this.sourceLength !== that.sourceLength) {
-			throw new Error("Both operations have to have the same base length");
+			throw new Error(
+				"Both operations have to have the same source length.\na:" +
+				this.sourceLength + "\nb: " +
+				that.sourceLength
+			);
 		}
 		var thisprime = new Operation();
 		var thatprime = new Operation();

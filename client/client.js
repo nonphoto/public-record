@@ -1,5 +1,6 @@
 var client = null;
 var editor = null;
+var auto = false;
 var name = "";
 var time = 0;
 var active = null;
@@ -7,6 +8,12 @@ var buffer = null;
 var oldValue = "";
 
 window.onload = function() {
+	var toggle = document.getElementById('toggle');
+	toggle.onclick = function() {
+		auto = !auto;
+		this.classList.toggle('selected');
+	}
+
 	editor = document.getElementById('editor');
 	editor.oninput = function() {
 		var operation = diff(oldValue, editor.value);
@@ -16,7 +23,7 @@ window.onload = function() {
 		else {
 			buffer = operation;
 		}
-		if (document.getElementById('checkbox').checked) {
+		if (auto) {
 			sendUpdates();
 		}
 		console.log(buffer);
@@ -24,39 +31,43 @@ window.onload = function() {
 	};
 
 	editor.onkeydown = function(e) {
-		if (e.keyCode == 13 && e.metaKey) {
+		if (e.keyCode == 13 && (e.metaKey || e.ctrlKey)) {
 			sendUpdates();
 		}
 	};
 
-	client = new WebSocket(location.origin.replace(/^http/, 'ws'));
+	// var address = location.origin.replace(/^http/, 'ws');
+	client = new WebSocket('wss://public-record.herokuapp.com');
 	client.onerror = function() {
 		console.log('Connection error');
 	};
 
 	client.onopen = function() {
 		console.log('Client opened');
+		spinBlue();
 	};
 
 	client.onclose = function() {
 		console.log('Client closed');
+		spinRed();
 	};
 
 	client.onmessage = function(e) {
 		if (typeof e.data === 'string') {
 			var message = JSON.parse(e.data);
 			console.log(message);
+			time = Math.max(time, message.time);
 			if (message.type === 'init') {
 				name = message.assign;
 				editor.value = message.text;
 				oldValue = editor.value;
 			}
 			else if (message.type === 'operation') {
-				time = Math.max(time, message.time + 1);
 				if (message.source == name) {
 					if (active) {
+						spinStop();
 						active = false;
-						if (document.getElementById('checkbox').checked) {
+						if (auto) {
 							sendUpdates();
 						}
 					}
@@ -115,6 +126,7 @@ function sendUpdates() {
 		active = buffer;
 		buffer = null;
 		sendOperation(active);
+		spinStart();
 	}
 };
 
@@ -133,3 +145,21 @@ function applyOperation(operation) {
 	editor.value = operation.apply(editor.value);
 	oldValue = editor.value;
 };
+
+function spinStart() {
+	document.getElementById('spinner').style.animationName = 'spin';
+}
+
+function spinStop() {
+	document.getElementById('spinner').style.animationName = 'none';
+}
+
+function spinBlue() {
+	document.getElementById('spinner').style.stroke = '#419bf9';
+	document.getElementById('toggle').style.borderColor = '#419bf9';
+}
+
+function spinRed() {
+	document.getElementById('spinner').style.stroke = 'red';
+	document.getElementById('toggle').style.borderColor = 'red';
+}
