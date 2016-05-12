@@ -194,8 +194,8 @@ var Operation = function(other) {
 		if (this.sourceLength !== that.sourceLength) {
 			throw new Error("Both operations have to have the same base length");
 		}
-		var thisprime = new TextOperation();
-		var thatprime = new TextOperation();
+		var thisprime = new Operation();
+		var thatprime = new Operation();
 		var i = 0;
 		var j = 0;
 		var a = this.ops[i++];
