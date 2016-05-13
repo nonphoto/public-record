@@ -1,6 +1,6 @@
 var client = null;
 var editor = null;
-var auto = false;
+var auto = true;
 var name = "";
 var time = 0;
 var active = null;
