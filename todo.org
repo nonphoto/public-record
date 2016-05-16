@@ -1,39 +1,3 @@
-* presentation
-** what's the problem?
-*** we want to create a real-time collaborative document editor
-*** let's model this as just inserts and deletes in plain text
-*** requirements: (fiddle w/ this)
-**** collaboration in real time
-***** this means we can't just use locks, for example
-**** smooth user experience: local changes are applied immediately
-***** i.e., apply changes optimistically, resolve conflicts later
-**** client's documents should eventually converge
-** enter OT
-*** example
-**** David and Jonas both have documents with the text "go"
-**** say David enters 'a', Jonas enters 't' at the same time
-**** ...
-**** overall, this should be oriented around the diamond diagram
-         go
-      a /  \ t
-     goa    got
-**** if we decide that 'a' should occur before 't' (somehow smooth this), 
-then give the example solution here
-*** now generalize
-**** we've seen example of OT framework
-**** suppose a and b are examples of operations on document
-**** need to find a' and b' to complete the diamond
-**** this gives the spec for transform: xform(a,b) -> (a',b') s.t. ...
-** our project
-*** specs/priorities:
-**** web interface
-**** insert, delete
-*** things to talk about:
-**** parsing operations, taking diffs, etc.
-**** connecting clients to server, need to set up live websocket connection
-**** operation structure, composing operations, etc
-***** perhaps motivate by having multiple 
-** testing
 * architecture
 ** server
 *** web server
@@ -89,3 +53,66 @@ loop:
 *** server
 **** greeter thread
 - initialize 
+* for submission
+** implementation
+*** testing
+**** scaling to many users
+***** write bot that randomly inserts or deletes characters
+***** evaluate throughput (operations/s) as we increase # of concurrenct bots
+** writing
+*** intro
+**** say what Public Record is
+*** background
+**** requirements of real-time collaborative editors
+***** truly real-time collaboration
+i.e., no checking-in-checking-out of versions + real-time
+updates of other users' changers
+***** smooth user experience:
+every change should be applied to local copy immediately
+***** convergence
+local copies should eventually converge
+***** ==> need some kind of optimistic concurrency control
+**** operational transformation
+***** a general framework for applying optimistic concurrency control
+across various domains
+***** ...
+*** architectural overview
+**** client-server structure
+***** clients connect to central server host
+***** server
+****** receive operations from clients
+****** update master state
+****** broadcast operations back out to all clients
+******* operations have a field for original client author
+******* operation sent back to original client serves as ack
+***** client
+****** send each operation to server
+****** upon receiving an operation from the server:
+******* if client is author: ignore
+******* if client is not author:
+******** if client has recent operations that have not been
+acknowledged, transform received op against all these
+operations and apply
+******** otherwise, apply directly
+**** concurrency control:
+***** recall that, to apply OT to a pair of operations, need to
+know which operation happened first
+***** for clients, this is simple:
+****** for any two local operations, ordering is input order
+****** for any two foreign operations, ordering is receipt order
+****** for a local operation and a foreign operation,
+local happened before foreign iff local has been acknowledged
+by server
+****** in other words, defer to ordering determined by server
+***** server:
+****** need to handle case in which two clients each perform an
+operation that the other is not aware of
+****** order in which they are received from clients determines
+order in which they are applied to master state
+****** ...
+**** optimizing bandwidth
+***** operations structured to support composition
+*** performance evaluation
+**** 
+*** future work
+**** replication
