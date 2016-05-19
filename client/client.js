@@ -6,6 +6,8 @@ var time = 0;
 var active = null;
 var buffer = null;
 var oldValue = "";
+var sendInterval = null;
+var intervalTime = 5000;
 
 window.onload = function() {
 	var toggle = document.getElementById('toggle');
@@ -44,6 +46,7 @@ window.onload = function() {
 
 	client.onopen = function() {
 		console.log('Client opened');
+		sendPing();
 		spinBlue();
 	};
 
@@ -139,7 +142,19 @@ function sendOperation(operation) {
 	}
 	client.send(JSON.stringify(message));
 	console.log(operation);
+	clearInterval(sendInterval);
+	sendInterval = setInterval(sendPing, intervalTime);
 };
+
+function sendPing() {
+	var ping = {
+		type: 'ping'
+	}
+	client.send(JSON.stringify(ping));
+	console.log(ping);
+	clearInterval(sendInterval);
+	sendInterval = setInterval(sendPing, intervalTime);
+}
 
 function applyOperation(operation) {
 	editor.value = operation.apply(editor.value);
