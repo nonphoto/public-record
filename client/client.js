@@ -5,9 +5,9 @@ var name = "";
 var time = 0;
 var active = null;
 var buffer = null;
-var oldValue = "";
+var oldText = "";
 var sendInterval = null;
-var intervalTime = 10000;
+var intervalTime = 30000;
 
 window.onload = function() {
 	var toggle = document.getElementById('toggle');
@@ -18,7 +18,7 @@ window.onload = function() {
 
 	editor = document.getElementById('editor');
 	editor.oninput = function() {
-		var operation = diff(oldValue, editor.value);
+		var operation = diff(oldText, editor.value);
 		if (buffer) {
 			buffer = buffer.compose(operation);
 		}
@@ -29,7 +29,7 @@ window.onload = function() {
 			sendUpdates();
 		}
 		console.log(buffer);
-		oldValue = editor.value;
+		oldText = editor.value;
 	};
 
 	editor.onkeydown = function(e) {
@@ -67,7 +67,7 @@ function openSocket() {
 			if (message.type === 'init') {
 				name = message.assign;
 				editor.value = message.text;
-				oldValue = editor.value;
+				oldText = editor.value;
 			}
 			else if (message.type === 'operation') {
 				if (message.source == name) {
@@ -162,7 +162,7 @@ function sendPing() {
 
 function applyOperation(operation) {
 	editor.value = operation.apply(editor.value);
-	oldValue = editor.value;
+	oldText = editor.value;
 };
 
 function spinStart() {
