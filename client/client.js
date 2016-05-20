@@ -7,7 +7,7 @@ var active = null;
 var buffer = null;
 var oldValue = "";
 var sendInterval = null;
-var intervalTime = 5000;
+var intervalTime = 10000;
 
 window.onload = function() {
 	var toggle = document.getElementById('toggle');
@@ -37,7 +37,10 @@ window.onload = function() {
 			sendUpdates();
 		}
 	};
+	openSocket();
+};
 
+function openSocket() {
 	// var address = location.origin.replace(/^http/, 'ws');
 	client = new WebSocket('wss://public-record.herokuapp.com');
 	client.onerror = function() {
@@ -53,6 +56,7 @@ window.onload = function() {
 	client.onclose = function() {
 		console.log('Client closed');
 		spinRed();
+		window.requestAnimationFrame(openSocket);
 	};
 
 	client.onmessage = function(e) {
@@ -104,7 +108,7 @@ window.onload = function() {
 			}
 		}
 	};
-};
+}
 
 function diff(a, b) {
 	i = 0;
