@@ -141,6 +141,7 @@ if (typeof window === 'undefined') {
 	var address = process.argv[3];
 	if (address) {
 		startClient(address);
+		console.log('!');
 		arg = process.argv[2];
 		if (arg == 'speedy') {
 			onInit = function(text) {
