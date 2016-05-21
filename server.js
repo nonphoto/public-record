@@ -10,6 +10,10 @@ var operations = [];
 var nextName = 0;
 var text = '';
 
+var firstTime = null;
+var lastTime = null;
+var requestCount = 0;
+
 pg.defaults.ssl = true;
 pg.connect(process.env.DATABASE_URL, function(err, client) {
 	if (err) throw err;
@@ -39,9 +43,17 @@ server.listen(port, function() {
 	console.log('Server listening on port ' + port);
 });
 
-// app.get('/results', function(req, res) {
-//   res.send('hello');
-// });
+app.get('/results', function(req, res) {
+	var total = lastTime - firstTime;
+	var average = total / (requestCount - 1);
+	res.send(
+		'<p>First: ' + firstTime +
+		'</p><p>Last: ' + lastTime +
+		'</p><p>Total time: ' + total +
+		'</p><p>Request count: ' + (requestCount - 1) +
+		'</p><p>Time per request: ' + average
+	);
+});
 
 var socket = new WebSocketServer({server: server});
 socket.on('connection', function(client) {
@@ -55,6 +67,13 @@ socket.on('connection', function(client) {
 		console.log(data);
 		var message = JSON.parse(data);
 		if (message.type === 'operation') {
+			if (requestCount == 0) {
+				firstTime = Date.now();
+			}
+			else {
+				lastTime = Date.now();
+			}
+			requestCount += 1;
 			var operation = new Operation(message.ops);
 			if (message.time < operations.length) {
 				var concurrentOperations = operations.slice(message.time - operations.length);

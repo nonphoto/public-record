@@ -42,8 +42,8 @@ function pushOperation(operation) {
 }
 
 function startClient() {
-	// var address = 'ws://137.165.163.122:5000';
-	var address = 'wss://public-record.herokuapp.com'
+	var address = 'ws://137.165.163.122:5000';
+	// var address = 'wss://public-record.herokuapp.com'
 	socket = new WebSocket(address);
 	socket.onerror = function() {
 		console.log('Connection error');
@@ -141,21 +141,32 @@ function sendPing() {
 
 if (typeof window === 'undefined') {
 	startClient();
-	onSynchronized = function() {
-		process.exit();
-	};
 	arg = process.argv[2];
-	if (arg == 'basic') {
+	if (arg == 'speedy') {
 		onInit = function(text) {
 			for (var i = 0; i < 10; i++) {
-				var operation = new Operation().retain(text.length + i).insert('a');
-				console.log(operation);
+				var operation = new Operation().retain(text.length + i).insert(i.toString(16));
 				pushOperation(operation);
 			}
+			process.exit();
 		};
 	}
-	else if (arg == 'other') {
-
+	else if (arg == 'realistic') {
+		onInit = function(text) {
+			var i = 0;
+			var f = function() {
+				if (i < 10) {
+					var operation = new Operation().retain(text.length + i).insert(i.toString(16));
+					pushOperation(operation);
+					i += 1;
+					setTimeout(f, 100);
+				}
+				else {
+					process.exit();
+				}
+			}
+			f();
+		}
 	}
 	else {
 		throw new Error('Incorrect arguments');
