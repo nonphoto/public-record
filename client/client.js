@@ -1,186 +1,133 @@
-var client = null;
-var editor = null;
-var auto = true;
-var name = "";
-var time = 0;
-var active = null;
-var buffer = null;
-var oldText = "";
-var sendInterval = null;
-var intervalTime = 30000;
+var Client = function(address) {
+	this.address = address;
+	this.socket = null;
+	this.name = '';
+	this.time = 0;
 
-window.onload = function() {
-	var toggle = document.getElementById('toggle');
-	toggle.onclick = function() {
-		auto = !auto;
-		this.classList.toggle('selected');
-	}
+	this.active = null;
+	this.buffer = null;
 
-	editor = document.getElementById('editor');
-	editor.oninput = function() {
-		var operation = diff(oldText, editor.value);
-		if (buffer) {
-			buffer = buffer.compose(operation);
+	this.sendInterval = null;
+	this.intervalTime = 30000;
+
+	this.oninit = function(text) {
+		// Override
+	};
+
+	this.onoperation = function(operation) {
+		// Override
+	};
+
+	this.push = function(operation) {
+		if (this.buffer) {
+			this.buffer = this.buffer.compose(operation);
 		}
 		else {
-			buffer = operation;
+			this.buffer = operation;
 		}
-		if (auto) {
-			sendUpdates();
-		}
-		console.log(buffer);
-		oldText = editor.value;
-	};
-
-	editor.onkeydown = function(e) {
-		if (e.keyCode == 13 && (e.metaKey || e.ctrlKey)) {
-			sendUpdates();
+		if (this.socket) {
+			this.sendOperations();
 		}
 	};
-	openSocket();
-};
 
-function openSocket() {
-	// var address = location.origin.replace(/^http/, 'ws');
-	var address = 'wss://public-record.herokuapp.com';
-	client = new WebSocket(address);
-	client.onerror = function() {
-		console.log('Connection error');
-	};
+	this.openSocket = function() {
+		var self = this;
+		this.socket = new WebSocket(self.address);
+		this.socket.onerror = function() {
+			console.log('Connection error');
+		};
 
-	client.onopen = function() {
-		console.log('Client opened');
-		sendPing();
-		spinBlue();
-	};
+		this.socket.onopen = function() {
+			console.log('Socket opened');
+			self.sendOperations();
+		};
 
-	client.onclose = function() {
-		console.log('Client closed');
-		spinRed();
-		console.log('Reopening connection');
-		window.requestAnimationFrame(openSocket);
-	};
+		this.socket.onclose = function() {
+			console.log('Socket closed');
+			self.socket = null;
+			clearInterval(this.sendInterval);
+			console.log('Reopening connection');
+			window.requestAnimationFrame(self.openSocket);
+		};
 
-	client.onmessage = function(e) {
-		if (typeof e.data === 'string') {
-			var message = JSON.parse(e.data);
-			console.log(message);
-			time = Math.max(time, message.time);
-			if (message.type === 'init') {
-				name = message.assign;
-				editor.value = message.text;
-				oldText = editor.value;
-			}
-			else if (message.type === 'operation') {
-				if (message.source == name) {
-					if (active) {
-						spinStop();
-						active = false;
-						if (auto) {
-							sendUpdates();
+		this.socket.onmessage = function(e) {
+			if (typeof e.data === 'string') {
+				var message = JSON.parse(e.data);
+				console.log(message);
+				self.time = Math.max(self.time, message.time);
+				if (message.type === 'init') {
+					self.name = message.assign;
+					self.oninit(message.text);
+				}
+				else if (message.type === 'operation') {
+					if (message.source == self.name) {
+						if (self.active) {
+							self.active = false;
+							self.sendOperations();
+						}
+					}
+					else {
+						var operation = new Operation(message.ops);
+						if (self.active && self.buffer) {
+							var t1 = self.active.transform(operation);
+							var t2 = self.buffer.transform(t1[1]);
+							self.onoperation(t2[1]);
+							self.active = t1[0];
+							self.buffer = t2[0];
+						}
+						else if (self.active) {
+							var t = self.active.transform(operation);
+							self.onoperation(t[1]);
+							self.active = t[0];
+						}
+						else if (self.buffer) {
+							var t = self.buffer.transform(operation);
+							self.onoperation(t[1]);
+							self.buffer = t[0];
+						}
+						else {
+							self.onoperation(operation);
 						}
 					}
 				}
 				else {
-					var operation = new Operation(message.ops);
-					if (active && buffer) {
-						var t1 = active.transform(operation);
-						var t2 = buffer.transform(t1[1]);
-						applyOperation(t2[1]);
-						active = t1[0];
-						buffer = t2[0];
-					}
-					else if (active) {
-						var t = active.transform(operation);
-						applyOperation(t[1]);
-						active = t[0];
-					}
-					else if (buffer) {
-						var t = buffer.transform(operation);
-						applyOperation(t[1]);
-						buffer = t[0];
-					}
-					else {
-						applyOperation(operation);
-					}
+					throw new Error('Unrecognized message type');
 				}
 			}
-			else {
-				throw new Error('Unrecognized message type');
+		};
+	};
+
+	this.sendOperations = function() {
+		if (this.socket && this.buffer && this.name && !this.active) {
+			this.active = this.buffer;
+			this.buffer = null;
+
+			var message = {
+				type: 'operation',
+				ops: this.active.ops,
+				time: this.time,
+				source: this.name
 			}
+			this.socket.send(JSON.stringify(message));
+			console.log(message);
+			clearInterval(this.sendInterval);
+			this.sendInterval = setInterval(this.sendPing, this.intervalTime);
 		}
 	};
-}
 
-function diff(a, b) {
-	i = 0;
-	while (a.charAt(0) == b.charAt(0) && a.length > 0 && b.length > 0) {
-		a = a.slice(1);
-		b = b.slice(1);
-		i++;
-	}
-
-	j = 0;
-	while (a.slice(-1) == b.slice(-1) && a.length > 0 && b.length > 0) {
-		a = a.slice(0, -1);
-		b = b.slice(0, -1);
-		j++;
-	}
-
-	return new Operation().retain(i).delete(a.length).insert(b).retain(j);
+	this.sendPing = function() {
+		var ping = {
+			type: 'ping'
+		}
+		this.socket.send(JSON.stringify(ping));
+		console.log(ping);
+		clearInterval(this.sendInterval);
+		this.sendInterval = setInterval(this.sendPing, this.intervalTime);
+	};
 };
 
-function sendUpdates() {
-	if (buffer && name && !active) {
-		active = buffer;
-		buffer = null;
-		sendOperation(active);
-		spinStart();
+if (typeof module !== 'undefined') {
+	module.exports = {
+		Client: Client
 	}
-};
-
-function sendOperation(operation) {
-	var message = {
-		type: 'operation',
-		ops: operation.ops,
-		time: time,
-		source: name
-	}
-	client.send(JSON.stringify(message));
-	console.log(operation);
-	clearInterval(sendInterval);
-	sendInterval = setInterval(sendPing, intervalTime);
-};
-
-function sendPing() {
-	var ping = {
-		type: 'ping'
-	}
-	client.send(JSON.stringify(ping));
-	console.log(ping);
-	clearInterval(sendInterval);
-	sendInterval = setInterval(sendPing, intervalTime);
-}
-
-function applyOperation(operation) {
-	editor.value = operation.apply(editor.value);
-	oldText = editor.value;
-};
-
-function spinStart() {
-	document.getElementById('spinner').style.animationName = 'spin';
-}
-
-function spinStop() {
-	document.getElementById('spinner').style.animationName = 'none';
-}
-
-function spinBlue() {
-	document.getElementById('spinner').style.stroke = '#419bf9';
-	document.getElementById('toggle').style.borderColor = '#419bf9';
-}
-
-function spinRed() {
-	document.getElementById('spinner').style.stroke = 'red';
-	document.getElementById('toggle').style.borderColor = 'red';
 }
