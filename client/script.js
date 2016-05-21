@@ -2,8 +2,8 @@ var editor = null;
 var initText = '';
 var oldText = '';
 
-var address = location.origin.replace(/^http/, 'ws');
-// var address = 'wss://public-record.herokuapp.com';
+// var address = location.origin.replace(/^http/, 'ws');
+var address = 'wss://public-record.herokuapp.com';
 client = startClient(address);
 
 onInit = function(text) {

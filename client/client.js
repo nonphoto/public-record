@@ -1,3 +1,7 @@
+if (typeof window === 'undefined') {
+	WebSocket = require('ws');
+}
+
 var socket = null;
 var name = '';
 var time = 0;
@@ -120,4 +124,8 @@ function sendPing() {
 	console.log(ping);
 	clearTimeout(sendInterval);
 	sendInterval = setTimeout(sendPing, intervalTime);
+}
+
+if (typeof window === 'undefined') {
+	startClient('wss://public-record.herokuapp.com');
 }
