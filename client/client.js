@@ -42,7 +42,7 @@ function pushOperation(operation) {
 }
 
 function startClient() {
-	var address = 'ws://137.165.163.122:5000';
+	var address = 'wss://137.165.163.122:5000';
 	// var address = 'wss://public-record.herokuapp.com'
 	socket = new WebSocket(address);
 	socket.onerror = function() {
