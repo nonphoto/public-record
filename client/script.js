@@ -3,7 +3,10 @@ var initText = '';
 var oldText = '';
 var attempts = 0;
 
-startClient();
+// var address = 'wss://public-record.herokuapp.com'
+var address = window.location.href.replace(/^http/, 'ws');
+console.log(address);
+startClient(address);
 
 onInit = function(text) {
 	if (editor) {
@@ -25,7 +28,7 @@ onClosed = function() {
 	window.requestAnimationFrame(function() {
 		if (attempts < 3) {
 			attempts += 1;
-			startClient();
+			startClient(address);
 		}
 	});
 }

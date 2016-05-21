@@ -41,9 +41,7 @@ function pushOperation(operation) {
 	}
 }
 
-function startClient() {
-	var address = 'wss://137.165.163.122:5000';
-	// var address = 'wss://public-record.herokuapp.com'
+function startClient(address) {
 	socket = new WebSocket(address);
 	socket.onerror = function() {
 		console.log('Connection error');
@@ -140,37 +138,43 @@ function sendPing() {
 }
 
 if (typeof window === 'undefined') {
-	startClient();
-	arg = process.argv[2];
-	if (arg == 'speedy') {
-		onInit = function(text) {
-			for (var i = 0; i < 100; i++) {
-				var operation = new Operation().retain(text.length).insert(i.toString(16));
-				text = operation.apply(text);
-				pushOperation(operation);
-			}
-			process.exit();
-		};
-	}
-	else if (arg == 'realistic') {
-		onInit = function(text) {
-			var i = 0;
-			var f = function() {
-				if (i < 100) {
+	var address = process.argv[3];
+	if (address) {
+		startClient(address);
+		arg = process.argv[2];
+		if (arg == 'speedy') {
+			onInit = function(text) {
+				for (var i = 0; i < 100; i++) {
 					var operation = new Operation().retain(text.length).insert(i.toString(16));
 					text = operation.apply(text);
 					pushOperation(operation);
-					i += 1;
-					setTimeout(f, 100);
 				}
-				else {
-					process.exit();
+				process.exit();
+			};
+		}
+		else if (arg == 'realistic') {
+			onInit = function(text) {
+				var i = 0;
+				var f = function() {
+					if (i < 100) {
+						var operation = new Operation().retain(text.length).insert(i.toString(16));
+						text = operation.apply(text);
+						pushOperation(operation);
+						i += 1;
+						setTimeout(f, 100);
+					}
+					else {
+						process.exit();
+					}
 				}
+				f();
 			}
-			f();
+		}
+		else {
+			throw new Error('Incorrect arguments');
 		}
 	}
 	else {
-		throw new Error('Incorrect arguments');
+		throw new Error('No socket address given');
 	}
 }
