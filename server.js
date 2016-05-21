@@ -1,6 +1,7 @@
 var express = require('express');
 var http = require('http');
 var pg = require('pg');
+var locks = require('locks');
 var WebSocketServer = require('ws').Server;
 var Operation = require('./client/operation').Operation;
 
@@ -9,6 +10,8 @@ var clients = {};
 var operations = [];
 var nextName = 0;
 var text = '';
+
+var mutex = locks.createMutex();
 
 var firstTime = null;
 var lastTime = null;
@@ -64,31 +67,34 @@ socket.on('connection', function(client) {
 	});
 
 	client.on('message', function(data, flags) {
-		console.log(data);
-		var message = JSON.parse(data);
-		if (message.type === 'operation') {
-			if (requestCount == 0) {
-				firstTime = Date.now();
-			}
-			else {
-				lastTime = Date.now();
-			}
-			requestCount += 1;
-			var operation = new Operation(message.ops);
-			if (message.time < operations.length) {
-				var concurrentOperations = operations.slice(message.time - operations.length);
-				for (var i = 0; i < concurrentOperations.length; i++) {
-					operation = operation.transform(concurrentOperations[i])[0];
-					message.ops = operation.ops;
+		mutex.lock(function() {
+			console.log(data);
+			var message = JSON.parse(data);
+			if (message.type === 'operation') {
+				if (requestCount == 0) {
+					firstTime = Date.now();
 				}
+				else {
+					lastTime = Date.now();
+				}
+				requestCount += 1;
+				var operation = new Operation(message.ops);
+				if (message.time < operations.length) {
+					var concurrentOperations = operations.slice(message.time - operations.length);
+					for (var i = 0; i < concurrentOperations.length; i++) {
+						operation = operation.transform(concurrentOperations[i])[0];
+						message.ops = operation.ops;
+					}
+				}
+				operations.push(operation);
+				message.time = operations.length;
+				for (var k in clients) {
+					clients[k].send(JSON.stringify(message));
+				}
+				text = operation.apply(text);
 			}
-			operations.push(operation);
-			message.time = operations.length;
-			for (var k in clients) {
-				clients[k].send(JSON.stringify(message));
-			}
-			text = operation.apply(text);
-		}
+			mutex.unlock();
+		});
 	});
 
 	client.name = nextName.toString(16);
