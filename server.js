@@ -10,6 +10,27 @@ var operations = [];
 var nextName = 0;
 var text = '';
 
+pg.defaults.ssl = true;
+pg.connect(process.env.DATABASE_URL, function(err, client) {
+	if (err) throw err;
+	console.log('Querying database');
+	client.query('SELECT * FROM DOCUMENT;').on('row', function(row) {
+		console.log('DOCUMENT: ' + JSON.stringify(row));
+		text = row.value;
+	});
+});
+
+process.on('SIGTERM', function() {
+	pg.connect(process.env.DATABASE_URL, function(err, client) {
+		if (err) throw err;
+		console.log('Updating database');
+		var databaseText = '';
+		client.query('UPDATE DOCUMENT SET VALUE = \'' + text + '\';').on('end', function(result) {
+			process.exit();
+		});
+	});
+});
+
 var app = express();
 app.use(express.static(__dirname + '/client'));
 

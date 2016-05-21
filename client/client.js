@@ -42,7 +42,8 @@ window.onload = function() {
 
 function openSocket() {
 	// var address = location.origin.replace(/^http/, 'ws');
-	client = new WebSocket('wss://public-record.herokuapp.com');
+	var address = 'wss://public-record.herokuapp.com';
+	client = new WebSocket(address);
 	client.onerror = function() {
 		console.log('Connection error');
 	};
@@ -56,6 +57,7 @@ function openSocket() {
 	client.onclose = function() {
 		console.log('Client closed');
 		spinRed();
+		console.log('Reopening connection');
 		window.requestAnimationFrame(openSocket);
 	};
 
