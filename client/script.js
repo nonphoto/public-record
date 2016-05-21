@@ -1,30 +1,34 @@
 var editor = null;
+var initText = '';
 var oldText = '';
 
-// var address = location.origin.replace(/^http/, 'ws');
-var address = 'wss://public-record.herokuapp.com';
-var client = new Client(address);
+var address = location.origin.replace(/^http/, 'ws');
+// var address = 'wss://public-record.herokuapp.com';
+client = startClient(address);
 
-client.oninit = function(text) {
+onInit = function(text) {
 	if (editor) {
 		editor.value = text;
 		oldText = text;
 	}
+	else {
+		initText = text;
+	}
 };
 
-client.onoperation = function(operation) {
+onOperation = function(operation) {
 	editor.value = operation.apply(editor.value);
 }
 
 window.onload = function() {
 	editor = document.getElementById('editor');
+	editor.value = initText;
+	oldText = initText;
 	editor.oninput = function() {
 		var operation = diff(oldText, editor.value);
-		client.push(operation);
+		pushOperation(operation);
 		oldText = editor.value;
 	};
-
-	client.openSocket();
 };
 
 function diff(a, b) {
