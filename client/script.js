@@ -1,8 +1,8 @@
 var editor = null;
 var oldText = '';
 
-var address = location.origin.replace(/^http/, 'ws');
-// var address = 'wss://public-record.herokuapp.com';
+// var address = location.origin.replace(/^http/, 'ws');
+var address = 'wss://public-record.herokuapp.com';
 var client = new Client(address);
 
 client.oninit = function(text) {
