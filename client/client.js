@@ -144,8 +144,9 @@ if (typeof window === 'undefined') {
 	arg = process.argv[2];
 	if (arg == 'speedy') {
 		onInit = function(text) {
-			for (var i = 0; i < 10; i++) {
-				var operation = new Operation().retain(text.length + i).insert(i.toString(16));
+			for (var i = 0; i < 100; i++) {
+				var operation = new Operation().retain(text.length).insert(i.toString(16));
+				text = operation.apply(text);
 				pushOperation(operation);
 			}
 			process.exit();
@@ -155,8 +156,9 @@ if (typeof window === 'undefined') {
 		onInit = function(text) {
 			var i = 0;
 			var f = function() {
-				if (i < 10) {
-					var operation = new Operation().retain(text.length + i).insert(i.toString(16));
+				if (i < 100) {
+					var operation = new Operation().retain(text.length).insert(i.toString(16));
+					text = operation.apply(text);
 					pushOperation(operation);
 					i += 1;
 					setTimeout(f, 100);
