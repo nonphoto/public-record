@@ -1,5 +1,6 @@
 if (typeof window === 'undefined') {
 	WebSocket = require('ws');
+	Operation = require('./operation').Operation;
 }
 
 var socket = null;
@@ -20,6 +21,14 @@ var onOperation = function(operation) {
 	// Override
 };
 
+var onSynchronized = function() {
+	// Override
+};
+
+var onClosed = function() {
+	// Override
+};
+
 function pushOperation(operation) {
 	if (buffer) {
 		buffer = buffer.compose(operation);
@@ -32,7 +41,9 @@ function pushOperation(operation) {
 	}
 }
 
-function startClient(address) {
+function startClient() {
+	// var address = 'ws://localhost:5000';
+	var address = 'wss://public-record.herokuapp.com'
 	socket = new WebSocket(address);
 	socket.onerror = function() {
 		console.log('Connection error');
@@ -47,8 +58,7 @@ function startClient(address) {
 		console.log('Socket closed');
 		socket = null;
 		clearTimeout(sendInterval);
-		console.log('Reopening connection');
-		window.requestAnimationFrame(startClient);
+		onClosed();
 	};
 
 	socket.onmessage = function(e) {
@@ -114,6 +124,9 @@ function sendOperations() {
 		clearTimeout(sendInterval);
 		sendInterval = setTimeout(sendPing, intervalTime);
 	}
+	if (socket && !buffer && !active) {
+		onSynchronized();
+	}
 }
 
 function sendPing() {
@@ -127,5 +140,24 @@ function sendPing() {
 }
 
 if (typeof window === 'undefined') {
-	startClient('wss://public-record.herokuapp.com');
+	startClient();
+	onSynchronized = function() {
+		process.exit();
+	};
+	arg = process.argv[2];
+	if (arg == 'basic') {
+		onInit = function(text) {
+			for (var i = 0; i < 10; i++) {
+				var operation = new Operation().retain(text.length + i).insert('a');
+				console.log(operation);
+				pushOperation(operation);
+			}
+		};
+	}
+	else if (arg == 'other') {
+
+	}
+	else {
+		throw new Error('Incorrect arguments');
+	}
 }

@@ -1,10 +1,9 @@
 var editor = null;
 var initText = '';
 var oldText = '';
+var attempts = 0;
 
-// var address = location.origin.replace(/^http/, 'ws');
-var address = 'wss://public-record.herokuapp.com';
-client = startClient(address);
+startClient();
 
 onInit = function(text) {
 	if (editor) {
@@ -14,10 +13,20 @@ onInit = function(text) {
 	else {
 		initText = text;
 	}
+	attempts = 0;
 };
 
 onOperation = function(operation) {
 	editor.value = operation.apply(editor.value);
+}
+
+onClosed = function() {
+	window.requestAnimationFrame(function() {
+		if (attempts < 3) {
+			attempts += 1;
+			startClient();
+		}
+	});
 }
 
 window.onload = function() {

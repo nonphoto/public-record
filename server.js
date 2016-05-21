@@ -39,6 +39,10 @@ server.listen(port, function() {
 	console.log('Server listening on port ' + port);
 });
 
+// app.get('/results', function(req, res) {
+//   res.send('hello');
+// });
+
 var socket = new WebSocketServer({server: server});
 socket.on('connection', function(client) {
 
