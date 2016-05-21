@@ -18,6 +18,7 @@ onInit = function(text) {
 
 onOperation = function(operation) {
 	editor.value = operation.apply(editor.value);
+	oldText = editor.value;
 }
 
 onClosed = function() {
