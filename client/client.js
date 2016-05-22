@@ -9,6 +9,7 @@ var time = 0;
 
 var active = null;
 var buffer = null;
+var bufferTime = time;
 
 var sendInterval = null;
 var intervalTime = 5000;
@@ -36,6 +37,7 @@ function pushOperation(operation) {
 	else {
 		buffer = operation;
 	}
+	bufferTime = time;
 	if (socket) {
 		sendOperations();
 	}
@@ -63,7 +65,7 @@ function startClient(address) {
 		if (typeof e.data === 'string') {
 			var message = JSON.parse(e.data);
 			console.log(message);
-			time = Math.max(time, message.time + 1);
+			time = Math.max(time, message.time);
 			if (message.type === 'init') {
 				name = message.assign;
 				onInit(message.text);
@@ -83,6 +85,7 @@ function startClient(address) {
 						onOperation(t2[1]);
 						active = t1[0];
 						buffer = t2[0];
+						bufferTime = time;
 					}
 					else if (active) {
 						var t = active.transform(operation);
@@ -93,6 +96,7 @@ function startClient(address) {
 						var t = buffer.transform(operation);
 						onOperation(t[1]);
 						buffer = t[0];
+						bufferTime = time;
 					}
 					else {
 						onOperation(operation);
@@ -114,7 +118,7 @@ function sendOperations() {
 		var message = {
 			type: 'operation',
 			ops: active.ops,
-			time: time,
+			time: bufferTime,
 			source: name
 		}
 		socket.send(JSON.stringify(message));
