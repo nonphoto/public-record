@@ -33,6 +33,10 @@ onClosed = function() {
 	});
 }
 
+getText = function() {
+	return editor.value;
+}
+
 window.onload = function() {
 	editor = document.getElementById('editor');
 	editor.value = initText;

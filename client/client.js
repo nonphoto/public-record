@@ -9,7 +9,6 @@ var time = 0;
 
 var active = null;
 var buffer = null;
-var bufferTime = time;
 
 var sendInterval = null;
 var intervalTime = 5000;
@@ -30,6 +29,10 @@ var onClosed = function() {
 	// Override
 };
 
+var getText = function() {
+	// Override
+}
+
 function pushOperation(operation) {
 	if (buffer) {
 		buffer = buffer.compose(operation);
@@ -37,7 +40,6 @@ function pushOperation(operation) {
 	else {
 		buffer = operation;
 	}
-	bufferTime = time;
 	if (socket) {
 		sendOperations();
 	}
@@ -64,6 +66,7 @@ function startClient(address) {
 	socket.onmessage = function(e) {
 		if (typeof e.data === 'string') {
 			var message = JSON.parse(e.data);
+			console.log('Receiving');
 			console.log(message);
 			time = Math.max(time, message.time);
 			if (message.type === 'init') {
@@ -85,7 +88,6 @@ function startClient(address) {
 						onOperation(t2[1]);
 						active = t1[0];
 						buffer = t2[0];
-						bufferTime = time;
 					}
 					else if (active) {
 						var t = active.transform(operation);
@@ -96,7 +98,6 @@ function startClient(address) {
 						var t = buffer.transform(operation);
 						onOperation(t[1]);
 						buffer = t[0];
-						bufferTime = time;
 					}
 					else {
 						onOperation(operation);
@@ -118,10 +119,11 @@ function sendOperations() {
 		var message = {
 			type: 'operation',
 			ops: active.ops,
-			time: bufferTime,
+			time: time,
 			source: name
 		}
 		socket.send(JSON.stringify(message));
+		console.log('Sending');
 		console.log(message);
 		clearTimeout(sendInterval);
 		sendInterval = setTimeout(sendPing, intervalTime);
@@ -150,7 +152,8 @@ if (typeof window === 'undefined') {
 		if (arg == 'speedy') {
 			onInit = function(text) {
 				for (var i = 0; i < 100; i++) {
-					var operation = new Operation().retain(text.length).insert(i.toString(16));
+					var t = getText();
+					var operation = new Operation().retain(t.length).insert(i.toString(16));
 					text = operation.apply(text);
 					pushOperation(operation);
 				}
@@ -162,7 +165,8 @@ if (typeof window === 'undefined') {
 				var i = 0;
 				var f = function() {
 					if (i < 100) {
-						var operation = new Operation().retain(text.length).insert(i.toString(16));
+						var t = getText();
+						var operation = new Operation().retain(t.length).insert(i.toString(16));
 						text = operation.apply(text);
 						pushOperation(operation);
 						i += 1;
