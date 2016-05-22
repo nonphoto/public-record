@@ -62,6 +62,7 @@ function startClient(address) {
 	socket.onmessage = function(e) {
 		if (typeof e.data === 'string') {
 			var message = JSON.parse(e.data);
+			console.log('Receiving');
 			console.log(message);
 			time = Math.max(time, message.time);
 			if (message.type === 'init') {
@@ -118,6 +119,7 @@ function sendOperations() {
 			source: name
 		}
 		socket.send(JSON.stringify(message));
+		console.log('Sending');
 		console.log(message);
 		clearTimeout(sendInterval);
 		sendInterval = setTimeout(sendPing, intervalTime);
