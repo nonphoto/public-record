@@ -152,7 +152,8 @@ if (typeof window === 'undefined') {
 		if (arg == 'speedy') {
 			onInit = function(text) {
 				for (var i = 0; i < 100; i++) {
-					var operation = new Operation().retain(getText().length).insert(i.toString(16));
+					var t = getText();
+					var operation = new Operation().retain(t.length).insert(i.toString(16));
 					text = operation.apply(text);
 					pushOperation(operation);
 				}
@@ -164,7 +165,8 @@ if (typeof window === 'undefined') {
 				var i = 0;
 				var f = function() {
 					if (i < 100) {
-						var operation = new Operation().retain(getText().length).insert(i.toString(16));
+						var t = getText();
+						var operation = new Operation().retain(t.length).insert(i.toString(16));
 						text = operation.apply(text);
 						pushOperation(operation);
 						i += 1;
