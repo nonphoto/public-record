@@ -63,7 +63,7 @@ function startClient(address) {
 		if (typeof e.data === 'string') {
 			var message = JSON.parse(e.data);
 			console.log(message);
-			time = Math.max(time, message.time);
+			time = Math.max(time, message.time + 1);
 			if (message.type === 'init') {
 				name = message.assign;
 				onInit(message.text);
