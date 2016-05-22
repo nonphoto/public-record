@@ -65,29 +65,35 @@ inner sep=2ex,
 ]
 
 
-
+%\usepackage{titling}
+%\setlength{\droptitle}{5em}
 
 \begin{document}
 
 \title{Public Record: Implementing a Real-Time Collaborative Editor 
-Using Operational Transformation}
+Using Operational Transformation
+}
 \date{}
 
 \author{
   {\rm Jonas Luebbers}\hspace{1cm}
   {\rm David Moon}
+\vspace{1cm}
 }
 
 \maketitle
 
+
+
 \thispagestyle{empty}
 %\pagestyle{empty}
+                   
                                    
 \section{Introduction}
 
 This paper presents our implementation of Public Record, a publicly accessible real-time collaborative document editor.  Public Record maintains a single, persistent, unbounded document.  Users may read and edit this document through a minimal web interface consisting of a single text box, which is accessible by any bored individual with the URL and nothing better to do.  The purpose of this project was to learn about and implement a general technique for optimistic concurrency control called Operational Transformation (OT).
 
-We begin in Section \ref{sec:background} with an overview of the particular requirements imposed by real-time collaboration and the key concepts underlying OT; we also review and compare against OT some recently developed, alternative solutions for  optimistic concurrency control.  We then describe in Section \ref{sec:architecture} our implementation of OT in Public Record; we also describe in this section a number of other key features, optimizations, and challenges encountered during development.  In Section \ref{sec:evaluation}, we evaluate the performance of Public Record.  Finally, in Section \ref{sec:future}, we discuss various directions for future work.
+We begin in Section \ref{sec:background} with an overview of the particular requirements imposed by real-time collaboration and the key concepts underlying OT.  We then describe in Section \ref{sec:architecture} our implementation of OT in Public Record; we also describe in this section a number of other key features, optimizations, and challenges encountered during development.  In Section \ref{sec:evaluation}, we evaluate the performance of Public Record.  Finally, in Section \ref{sec:future}, we discuss various directions for future work.
 
 
 
@@ -580,12 +586,36 @@ Now consider Figure \ref{fig:composition-example}, which depicts a client's buff
 
 \section{Evaluation} \label{sec:evaluation}
 
+Evaluating the performance of a real-time collaborator like Public Record comes with a unique set of challenges.  Most testing frameworks like \code{ab} stress test applications by sending many http requests.  However, when evaluating Public Record, we are not interested in the server's ability to server http requests.  Rather, our goal is to test our implementation of the OT algorithm itself.  This means that that our testing framework must simulate actual clients and client-server interactions.
+
+%\paragraph*{Client simulator} 
+
+Our plan to accomplish this was to run client bots deployed over many Amazon EC2 micro-instances.  Each client bot would connect to our server as if it were a real user and run various test procedures.  However, this was not so straightforward.
+
+One particular challenge lay in designing the client bots so that they could run independently of a browser window.  Because our client is implemented in JavaScript and originally relied heavily upon the input received through browser-specific callback functions (e.g.\ \code{oninput}, \code{onkeydown}, etc.), we re-factored the client so that it can also construct operations programmatically.  This way, the client could be run both within a browser as well as in the shell environment of an Amazon EC2 instance.
+
+\newcommand{\rednote}[1]{\textcolor{red}{#1}}
+
+Another challenge lay in simply distributing and running our client code on the EC2 instances.  In order to test Public Record's ability to handle many simultaneous users, we needed to be able to start the client code on all of our EC2 instances at once.  Manually doing this one by one via SSH was evidently not an option.  Originally, we tried to use a script called Bees with Machine Guns \cite{Be}; however, this turned out to be out-of-date with Amazon's latest updates to its EC2 instances.  We then discovered that there is a new option in the AWS console for sending commands to many EC2 instances at once; this required deleting and re-creating our instances under a new AMI with the correct permissions, along with installing the Amazon Run Command agent on every instance.
+
+Our plan was to measure the average server response time as we varied the number of requests made simultaneously.  We wrote two client bots---one which sends operations as quickly as possible to the server, and another which sends operations at the rate of an average typist.  While the former test may seem like a more effective way to stress our server, the reality is that producing operations at such quick rate means many operations are composed together before they are sent.  For this reason, the latter test gives us more realistic results.  
+
+Unfortunately, after all this work, we were unable to perform any evaluations.  The optimization in operation structure that allows for composition makes it difficult for the client bots to construct operations programmatically.  Using this structure, each operation has a source and target length and can only be applied to strings of the source length; similarly, two operations can only be composed if the target length of one matches the source length of the other.  This meant that the client bots could simply send a blind stream of operations, but rather had to keep track of the server operation history and only send operations that could applied to the server's current state.  This is difficult to control when the client bots are sending operations at a fixed rate, regardless of server acknowledgment.  We have some ideas about how to address this issue; however, we realized that this was the source of error very late in the process, and we decided that it was time to let things go.
+
 \section{Future Work} \label{sec:future}
 
-There are many obvious directions for future work on Public Record.  One glaring implementation flaw is our lack of maintenance of the server's queue that stores the history of all applied operations.  This could easily be managed by keeping track of last-received operation timestamps for each client, and removing from the queue any operations with timestamps smaller than any client.  Without this fix, Public Record is certain to run out of memory if it runs for long enough.  A related improvement would be to replicate the master document to ensure that it truly persists.
+There are many obvious directions for future work on Public Record.  One glaring implementation flaw is our lack of maintenance of the server's queue that stores the history of all applied operations.  This could easily be managed by keeping track of last-received operation timestamps for each client, and removing from the queue any operations with timestamps smaller than any client.  Without this fix, Public Record is certain to run out of memory if it runs for long enough.  A related improvement would be to replicate the master document to ensure that it truly persists.  
+
+Another source of inefficiency is parsing user input.  Because we implemented Public Record using JavaScript, our parsing is restricted by what is available through browser callback functions.  Because these functions do not provide the exact location of user input within the textbox interface, we are forced to take a diff of the original state and the new state upon every user input.  Although we do not need to run a full diff algorithm due to the fact that a user can only apply changes at her cursor at every point, parsing input still grows linearly with the length of the document.  To get around this issue, we would have to hack into the depths of JavaScript.
 
 
-\begin{thebibliography}{S} % '2nd argument contains the widest acronym'
+\begin{thebibliography}{EG} % '2nd argument contains the widest acronym'
+
+\bibitem[B]{B} T.\ Baumann. ``What is Operational Transformation''. Available \url{https://operational-transformation.github.io/what-is-ot.html} [Accessed: 20 May 2016]
+
+\bibitem[Be]{Be} Bees with Machine Guns. Available \url{https://github.com/newsapps/beeswithmachineguns} [Accessed: 20 May 2016]
+
+\bibitem[EG]{EG} C.A.\ Ellis \& S.J. Gibbs. ``Concurrency Control in Groupware Systems''. SIGMOD (1989).
 
 \bibitem[S]{S}  D.\ Spiewak. ``Understanding and Applying Operational Transformation''. 17 May 2010. [Blog entry]. Code Commit. Available \url{http://www.codecommit.com/blog/java/understanding-and-applying-\\ operational-transformation}\newline [Accessed: 20 May 2016]
 
