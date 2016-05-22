@@ -2,6 +2,7 @@
 \usepackage{amsmath}
 \usepackage{usenix,graphicx,times}
 \usepackage{hyperref}
+\usepackage{subcaption}
 \usepackage{pgfplots, pgfplotstable}
 \usepgfplotslibrary{statistics}
 
@@ -225,50 +226,50 @@ Upon receiving Bob's operation \code{insert(0,'B')}, Alice transforms it against
 
 Altogether, this ensures that both Alice and Bob's local copies converge to the state \code{B339A}.  The \texttt{xform} function may also have been defined such that their copies converge to \code{B33A9} (cf.\ Figure \ref{fig:noncommutative}); which final state is chosen for convergence, however, is not important.
 
-Finally, note that the \code{xform} function may be lifted to sequences of operations in a well-defined manner, as shown in Figure \ref{fig:lift-to-seq}.  This allows 
+%Finally, note that the \code{xform} function may be lifted to sequences of operations in a well-defined manner, as shown in Figure \ref{fig:lift-to-seq}.  Thus, if Bob had applied two operations at the same time as Alice's operation, he may 
 
-\begin{figure}
-\centering
-	\begin{tikzpicture}[>=stealth',font=\small\ttfamily]
-		\node (fn) {
-			xform :\ $(p,q_1q_2)\mapsto(p'',q'_1q'_2)$ 
-%			\begin{tabular}{ccc}
-%			xform & : & $(p,q_1q_2)$ \\
-%			& $\mapsto$ & $(\hl{\code{insert(4,'A')}},\hl{\code{insert(0,'B')}})$
-%			\end{tabular}
-		};
-
-		\matrix (m) [
-			below=.1 of fn,
-			matrix of nodes,
-			row sep=2em,
-			column sep=2em,
-		]
-		{
-			& \node (00) {\textbullet}; & \\
-			\node (10) {\textbullet}; & & \node (01) {\textbullet}; \\
-			&  \node (11) {\textbullet}; & & \node (02) {\textbullet}; \\
-			& & \node(12) {\textbullet}; \\%& & \node (03) {\textbullet}; \\
-%			& & & \node(13) {\textbullet}; \\
-		};
-		\path[->]
-			(00) edge[above left]  node {$p$} (10)
-				 edge[above right] node {$q_1$} (01)
-			(01) edge[above left]  node {$p'$} (11)
-				 edge[above right] node {$q_2$} (02)
-			(02) edge[above left]  node {$p''$} (12)
-%				 edge[above right] node {$q_3$} (03)	
-		;
-		\path[<-]
-%			(13) edge[below left] node {$q'_3$} (12)
-%				 edge[above left] node {$p'''$} (03)
-			(12) edge[below left] node {$q'_2$} (11)
-			(11) edge[below left] node {$q'_1$} (10)
-		;
-	\end{tikzpicture}
-\caption{The \code{xform} function lifted to sequences.}
-\label{fig:lift-to-seq}
-\end{figure}
+%\begin{figure}
+%\centering
+%	\begin{tikzpicture}[>=stealth',font=\small\ttfamily]
+%		\node (fn) {
+%			xform :\ $(p,q_1q_2)\mapsto(p'',q'_1q'_2)$ 
+%%			\begin{tabular}{ccc}
+%%			xform & : & $(p,q_1q_2)$ \\
+%%			& $\mapsto$ & $(\hl{\code{insert(4,'A')}},\hl{\code{insert(0,'B')}})$
+%%			\end{tabular}
+%		};
+%
+%		\matrix (m) [
+%			below=.1 of fn,
+%			matrix of nodes,
+%			row sep=2em,
+%			column sep=2em,
+%		]
+%		{
+%			& \node (00) {\textbullet}; & \\
+%			\node (10) {\textbullet}; & & \node (01) {\textbullet}; \\
+%			&  \node (11) {\textbullet}; & & \node (02) {\textbullet}; \\
+%			& & \node(12) {\textbullet}; \\%& & \node (03) {\textbullet}; \\
+%%			& & & \node(13) {\textbullet}; \\
+%		};
+%		\path[->]
+%			(00) edge[above left]  node {$p$} (10)
+%				 edge[above right] node {$q_1$} (01)
+%			(01) edge[above left]  node {$p'$} (11)
+%				 edge[above right] node {$q_2$} (02)
+%			(02) edge[above left]  node {$p''$} (12)
+%%				 edge[above right] node {$q_3$} (03)	
+%		;
+%		\path[<-]
+%%			(13) edge[below left] node {$q'_3$} (12)
+%%				 edge[above left] node {$p'''$} (03)
+%			(12) edge[below left] node {$q'_2$} (11)
+%			(11) edge[below left] node {$q'_1$} (10)
+%		;
+%	\end{tikzpicture}
+%\caption{The \code{xform} function lifted to sequences.}
+%\label{fig:lift-to-seq}
+%\end{figure}
 
 
 
@@ -294,7 +295,7 @@ The client immediately applies any local operations and sends one at a time to t
 \paragraph*{Tracking concurrency}
 The \code{xform} function solves one problem; knowing when to use it is another.  Recall that \code{xform} applies to pairs of operations that are concurrently applied to a common document state.  Both the client and server need to be able to distinguish such pairs.
 
-For the client, this is simple.  An operation $p$ received from the server is concurrent with a local operation $q$ if and only if $p$ is received before $q$ is acknowledged.  Furthermore, $p$ applies to the same document state as the oldest unacknowledged local operation.  This means that, if the client has unacknowledged operations $q_1,q_2,q_3$, it may simply apply \code{xform} to $(p,q_1)$ to get...
+For the client, this is simple.  An operation $p$ received from the server is concurrent with a local operation $q$ if and only if $p$ is received before $q$ is acknowledged.  Furthermore, $p$ applies to the same document state as the oldest unacknowledged local operation.  This means that, if the client has unacknowledged operations $q_1,q_2,q_3$ upon the receipt of $p$, it may simply transform $p$ against each of the $q_i$ in succession.  The transformed result $p'''$ is applied to the document, while the results $q'_1,q'_2,q'_3$ form the new buffer.  See Figure \ref{fig:client-concurrency} for a depicition of this procedure.  This is equivalent to the behavior of Alice or Bob in the example in Section \ref{sec:background}.
 
 
 \begin{figure}
@@ -302,8 +303,8 @@ For the client, this is simple.  An operation $p$ received from the server is co
 	\begin{tikzpicture}[>=stealth',font=\small]
 	
 
-		\node[doc,label=above:client] (c) {};
-		\node[doc,label=above:server\vphantom{l},left=2 of c] (s) {};
+		\node[doc,label=above:Client] (c) {};
+		\node[doc,label=above:Server\vphantom{l},left=2 of c] (s) {};
 		\path[->]
 			(s) edge[above] node {$p$} (c)
 		;
@@ -330,11 +331,16 @@ For the client, this is simple.  An operation $p$ received from the server is co
 		};
 		
 		\path[->]
-			(unack) edge[right] node {$\code{xform}(\_,p)$} (unack')
+			(unack) edge[left] node {$\code{xform}(p,\_)$} (unack')
 		;
+		\coordinate (mid) at ($ (unack)!1.0/2!(unack') $);
+		\coordinate (mid') at ($ (mid) + (1.5,0) $);
+		\coordinate (mid'') at ($ (mid') + (0,1.96) $);
+		\draw[->] (mid) to (mid') to[right] node {$p'''$} (mid'') to (c);
+			
 
 		\matrix (m) [
-			below=3 of $ (c)!1.0/2!(s) $,
+			below=2.2 of $ (c)!1.0/2!(s) $,
 			matrix of nodes,
 			row sep=2em,
 			column sep=2em,
@@ -370,6 +376,7 @@ For the client, this is simple.  An operation $p$ received from the server is co
 %		;
 	\end{tikzpicture}
 \caption{Client-side concurrency tracking.}
+\label{fig:client-concurrency}
 \end{figure}
 
 
@@ -384,57 +391,198 @@ For the client, this is simple.  An operation $p$ received from the server is co
 %The client's local copy matches the server's master document upon initial connection.  Now suppose the client applies local operations $q_1, q_2, q_3$ in that order.  Before any are acknowledged, however, the server sends 
 
 
-The server, on the other hand, must keep track of operations received from many clients.  To do this, it assigns each 
+The server, on the other hand, must track concurrency between the operations received from many clients.  The server may simply apply operations in the order it receives; however, it must determine against which already applied operations a newly received operation should be transformed.  To do this, the server maintains a Lamport clock that corresponds to the number of operations it has applied to the master document.  The server also maintains a history of all applied operations (see Section \ref{sec:future}).  It attaches the current clock value to each broadcasted operation; then, when the client sends an operation $q$ to the server, it attaches the last received clock value from the server incremented by one.  The timestamps on the operations received by the server indicate from what point in its history it must begin transforming $q$ before applying it.
+
+\begin{figure}
+\centering
+	\begin{tikzpicture}[>=stealth',font=\small]
+	
+		\node[doc,label=above:Server\vphantom{l}] (s) {};
+		\node[doc,label=above:Client 1,right=1.8 of c] (c1) {};
+		\node[doc,label=below:Client 2,below=1.2 of s] (c2) {};
+	
+		\path[->]
+			(s.15) edge[above] node {$p_5\ p_4\ p_3\ p_2$} (c1.165)
+			(c1.195) edge[below] node {$q_3$} (s.345)
+		;
+		\path[->]
+			(s.280) edge (c2.80)
+			(c2.100) edge (s.260)
+		;
+		
+		\matrix (buf) [
+			left=1 of $ (s)!1.0/6!(c2) $,
+			matrix of nodes,
+			every node/.style={draw},
+			row sep=0 em,
+			label=above:history
+		]
+		{
+			$p_1$ \\
+			$p_2$ \\
+			\node[fill=black!20] (p3) {$p_3$}; \\
+			\node[fill=black!20] (p4) {$p_4$}; \\
+			\node[fill=black!20] (p5) {$p_5$}; \\
+			\node (p6) {$p_6$}; \\
+			\node[draw] (last) {\phantom{$p'_5$}}; \\
+		};
+		
+		\coordinate (q1) at ($ (p3) + (-.6,0) $);
+		\coordinate (q2) at ($ (p6) + (-.6,0) $);
+		\draw[->] (q1) to[left] node {$\code{xform}(\_,q_3)$} (q2) to (p6);
+
+
+		\matrix (m) [
+			below=3 of $ (c1)!1.5/2!(s) $,
+			matrix of nodes,
+			row sep=2em,
+			column sep=2em,
+		]
+		{
+			& & & &\node (00) {\textbullet}; & \\
+			& & & \node (10) {\textbullet}; & & \node (01) {\textbullet}; \\
+			& & \node (20) {\textbullet}; & & \node (11) {\textbullet}; \\
+			& \node(30) {\textbullet}; & & \node (21) {\textbullet}; & & \\
+			& & \node(31) {\textbullet}; & & &  \\
+		};
+		\path[->]
+			(00) edge[above left]  node {$p_3$} (10)
+				 edge[above right] node {$q_3$} (01)
+			(10) edge[above right]  node {$q'_3$} (11)
+				 edge[above left] node {$p_4$} (20)
+			(20) edge[above right]  node {$q''_3$} (21)
+				 edge[above left] node {$p_5$} (30)	
+		;
+		\path[<-]
+			(31) edge (21)
+				 edge[below left] node {$q'''_3 = p_6$} (30)
+			(21) edge (11)
+			(11) edge (01)
+		;
+	\end{tikzpicture}
+\caption{Server-side concurrency tracking.  The indices on the operations denote timestamps.}
+\label{fig:server-concurrency}
+\end{figure}
+
+For example, consider the diagram in Figure \ref{fig:server-concurrency}, where the indices on the operations denote their timestamps.  The server has accumulated a history of 6 operations $p_1$ through $p_6$.  In the meantime, its connection with Client 1 has lagged because of network latency, such that Client 1 has just received operation $p_2$.  Client 1 then sends a new operation $q_3$.  The timestamp 3 indicates that $q_3$ applies to the same document state as $p_3$, and that all applied operations since then are concurrent with $q_3$.  Thus, the server knows to transform $q_3$ against each of the operations $p_3, p_4, p_5$.  The transformed result $q'''_3 = p_6$ is then applied to the document and added to the history.
 
 
 \paragraph*{Operation composition} 
 Public Record essentially supports operations of two basic types: \code{insert(i,c)}, which inserts character \code{c} at index \code{i}, and \code{delete(i)}, which deletes the character at index \code{i}.  However, actually representing operations at this level of granularity is not optimal. Recall that the client must wait until each local operation is acknowledged by the server before it sends another.  Sending out operations on individual characters in this fashion may cause unacceptably slow rates of convergence between users in the presence of network latency.  
 %In the presence of any nontrivial network latency, this could induce a vicious cycle: the client must wait longer than usual to send out operations, during which the user applies more changes, thereby causing the client to take even longer to send out operations, and so on.
 
-To optimize against this, we borrow a trick from Google \cite{S} and structure operations so that they support \emph{composition}.  With operation composition, a client may simply compose together all local operations that are applied between the sending and acknowledgement of an operation.  For example, in Figure \ref{fig:composition}, the client may compose together the operations $q_2, q_3, q_4$ into $q$ while waiting for acknowledgment of $q_1$.
+To optimize against this, we borrow a trick from Google \cite{S} and structure operations so that they support \emph{composition}.  With operation composition, a client may simply compose together any local operations that occur while it waits for another to be acknowledged.  We elaborate on this optimization further below.
+%that are applied between the sending and acknowledgement of an operation.  
+%For example, in Figure \ref{fig:composition}, the client may compose together the operations $q_2, q_3, q_4$ into $q$ while waiting for acknowledgment of $q_1$.
+
+%\begin{figure}
+%\centering
+%	\begin{tikzpicture}[>=stealth',font=\small]
+%	
+%		\node[doc,label=above:client] (c) {};
+%		
+%		\matrix (m) [
+%			below=0 of c,		
+%			matrix of nodes,
+%			every node/.style={draw},
+%			column sep=0em,
+%			label=left:unack
+%		]
+%		{
+%			\node(q1){$q_1$\vphantom{$q'_1$}}; & \node(q2){$q_2$\vphantom{$q'_1$}}; & \node(q3){$q_3$\vphantom{$q'_1$}}; & \node(q4){$q_4$\vphantom{$q'_1$}}; \\
+%		};
+%		
+%		\draw[decorate,decoration={brace,mirror,raise=2pt}]
+%			(q2.south west) --node[below=.2cm]{$q$} (q4.south east)
+%		;
+%	\end{tikzpicture}
+%\caption{Optimization via operation composition.}
+%\label{fig:composition}
+%\end{figure}
+
+To support composition, operations are structured as \emph{traversals} of the whole document.  Specifically, an operation is an ordered list containing primitive traversal units of three types:
+\begin{itemize}
+\item \code{retain(n)} for some integer \code{n}, which advances the current position within the document by \code{n} characters;
+\item \code{insert(s)} for some string \code{s}, which inserts the string \code{s} at the current position, then advances the current position by the length of \code{s};
+\item \code{delete(n)} for some integer \code{n}, which deletes the next \code{n} characters from the current position.
+\end{itemize}
+In this form, an insertion that changes the document from \code{abc} to \code{abxc} would be represented as \code{retain(2),insert(x),retain(1)}.  
+
+Now consider Figure \ref{fig:composition-example}, which depicts a client's buffer of unacknowledged operations.  Figure \ref{fig:composition-example-a} shows the buffer at the granularity of individual character insertions and deletions.  While the client waits for acknowledgment of the first operation \code{ret(10),ins(s)}, however, it may compose the remaining operations in its buffer to a single operation as shown in Figure \ref{fig:composition-example-b}.  In so doing, the client minimizes the number of operations it must send to the server.
 
 \begin{figure}
 \centering
-	\begin{tikzpicture}[>=stealth',font=\small]
-	
-		\node[doc,label=above:client] (c) {};
-		
+	\begin{subfigure}{\linewidth}
+	\begin{tikzpicture}[>=stealth',font=\ttfamily\small]
 		\matrix (m) [
-			below=0 of c,		
 			matrix of nodes,
-			every node/.style={draw},
-			column sep=0em,
-			label=left:unack
+%			every node/.style={inner sep=0pt},			
+			row sep=1em,
+			column sep=-.3em,
 		]
 		{
-			\node(q1){$q_1$\vphantom{$q'_1$}}; & \node(q2){$q_2$\vphantom{$q'_1$}}; & \node(q3){$q_3$\vphantom{$q'_1$}}; & \node(q4){$q_4$\vphantom{$q'_1$}}; \\
+			\node[label=right:jeans rock] {\phantom{\textbullet}}; & \textbullet  \\
+			\node[label=right:jeans rocks] {\phantom{\textbullet}}; & \node (b) {\textbullet};\node[label=right:\phantom{R(4),D(1),R(5)}] {\phantom{\textbullet}}; & \node (c) {\phantom{\textbullet}}; \\
+			\node[label=right:jean rocks] {\phantom{\textbullet}}; & \textbullet \\
+			\node[label=right:jeann rocks] {\phantom{\textbullet}}; & \textbullet \\
+			\node[label=right:jeanni rocks] {\phantom{\textbullet}}; & \textbullet \\
+			\node[label=right:jeannie rocks] {\phantom{\textbullet}}; & \textbullet \\
+%			\node[label=left:jeans rock] {\textbullet}; \\
 		};
-		
-		\draw[decorate,decoration={brace,mirror,raise=2pt}]
-			(q2.south west) --node[below=.2cm]{$q$} (q4.south east)
+		\path[->]
+			(m-1-2) edge[right] node {R(10),I(s)} (b)
+			(b) edge[right] node {R(4),D(1),R(5)} (m-3-2)
+			(m-3-2) edge[right] node {R(4),I(n),R(5)} (m-4-2)
+			(m-4-2) edge[right] node {R(5),I(i),R(5)} (m-5-2)
+			(m-5-2) edge[right] node {R(6),I(e),R(5)} (m-6-2)
 		;
+		\path (b) edge (c) ;
+		\node[above right=.4 of m-1-2] {\underline{unack}};
 	\end{tikzpicture}
-\caption{Optimization via operation composition.}
-\label{fig:composition}
+	\caption{}
+	\label{fig:composition-example-a}
+	\end{subfigure}	
+	\vspace{.5cm}
+	
+	\begin{subfigure}{\linewidth}
+	\begin{tikzpicture}[>=stealth',font=\ttfamily\small]	
+		\matrix (m) [
+			matrix of nodes,
+			row sep=1em,
+			column sep=-.3em		
+		]
+		{
+			\node[label=right:jeans rock] {\phantom{\textbullet}}; & \textbullet  \\
+			\node[label=right:jeans rocks] {\phantom{\textbullet}}; & \node (b) {\textbullet};\node[label=right:\phantom{R(4),D(1),R(5)}] {\phantom{\textbullet}}; & \node (c) {\phantom{\textbullet}}; \\
+%			\node[label=right:jean rocks] {\phantom{\textbullet}}; & {} \\
+%			\node[label=right:jeann rocks] {\phantom{\textbullet}}; & {} \\
+%			\node[label=right:jeanni rocks] {\phantom{\textbullet}}; & {} \\
+			{} & {} \\
+			\node[label=right:jeannie rocks] {\phantom{\textbullet}}; & \textbullet \\
+%			\node[label=left:jeans rock] {\textbullet}; \\
+		};
+		\path[->]
+			(m-1-2) edge[right] node {R(10),I(s)} (b)
+			(b) edge[right,text width=2cm] node {R(4),D(1),\\ I(nie),R(5)} (m-4-2)
+		;
+		\path (b) edge (c) ;
+		\node[above right=.4 of m-1-2] {\underline{unack}};
+	\end{tikzpicture}
+	\caption{}
+	\label{fig:composition-example-b}
+	\end{subfigure}
+\caption{A client's buffer of unacknowledged operations (a)  without composition and (b) with composition.%$^{please^{love^{us}}}$
+}
+\label{fig:composition-example}
 \end{figure}
-
-Specifically, operations are structured as lists of elements of three different component types:
-\begin{itemize}
-\item \code{retain(n)} for some integer \code{n}, which 
-\item \code{insert(s)} for some string \code{s}
-\item \code{delete(n)} for 
-\end{itemize}
-
-
-
-
-\paragraph*{Dealing with JavaScript}
 
 
 
 \section{Evaluation} \label{sec:evaluation}
 
 \section{Future Work} \label{sec:future}
+
+There are many obvious directions for future work on Public Record.  One glaring implementation flaw is our lack of maintenance of the server's queue that stores the history of all applied operations.  This could easily be managed by keeping track of last-received operation timestamps for each client, and removing from the queue any operations with timestamps smaller than any client.  Without this fix, Public Record is certain to run out of memory if it runs for long enough.  A related improvement would be to replicate the master document to ensure that it truly persists.
 
 
 \begin{thebibliography}{S} % '2nd argument contains the widest acronym'
