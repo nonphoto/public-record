@@ -20,9 +20,12 @@ onInit = function(text) {
 };
 
 onOperation = function(operation) {
+	var selection = operation.applyToSelection(editor.selectionStart, editor.selectionEnd);
 	editor.value = operation.apply(editor.value);
+	console.log(selection);
 	oldText = editor.value;
-}
+	editor.setSelectionRange(selection[0], selection[1]);
+};
 
 onClosed = function() {
 	window.requestAnimationFrame(function() {
@@ -31,11 +34,11 @@ onClosed = function() {
 			startClient(address);
 		}
 	});
-}
+};
 
 getText = function() {
 	return editor.value;
-}
+};
 
 window.onload = function() {
 	editor = document.getElementById('editor');

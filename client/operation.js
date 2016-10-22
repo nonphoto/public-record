@@ -105,6 +105,44 @@ var Operation = function(other) {
 		return result
 	}
 
+	this.applyToSelection = function(a, b) {
+		var start = Math.min(a, b);
+		var end = Math.max(a, b);
+		var j = 0;
+		for (var i = 0, l = this.ops.length; i < l; i++) {
+			var op = this.ops[i];
+			if (isRetain(op)) {
+				j += op;
+			}
+			else if (isInsert(op)) {
+				if (j <= start) {
+					start += op.length;
+				}
+				if (j < end) {
+					end += op.length;
+				}
+			}
+			else {
+				if (j - op <= start) {
+					start += op;
+				}
+				if (j - op < end) {
+					end += op;
+				}
+				if (j < start &&  j - op >= start) {
+					start = j;
+				}
+				if (j < end && j - op >= end) {
+					end = j;
+				}
+				j -= op;
+			}
+								
+					
+		}
+		return [start, end];
+	}
+
 	this.compose = function(that) {
 		if (this.targetLength !== that.sourceLength) {
 			throw new Error("Cannot compose operations with mismatched lengths");
