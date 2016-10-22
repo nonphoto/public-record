@@ -123,22 +123,23 @@ var Operation = function(other) {
 				}
 			}
 			else {
-				if (j - op <= start) {
-					start += op;
-				}
-				if (j - op < end) {
-					end += op;
-				}
-				if (j < start &&  j - op >= start) {
+
+				if (j < start && j - op >= start) {
 					start = j;
 				}
-				if (j < end && j - op >= end) {
+				else if (j < end && j - op >= end) {
 					end = j;
 				}
+				else if (j - op <= start) {
+					start += op;
+					end += op;
+				}
+				else if (j - op < end) {
+					end += op;
+				}
+
 				j -= op;
 			}
-								
-					
 		}
 		return [start, end];
 	}

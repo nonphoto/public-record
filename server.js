@@ -17,6 +17,7 @@ var firstTime = null;
 var lastTime = null;
 var requestCount = 0;
 
+/*
 pg.defaults.ssl = true;
 pg.connect(process.env.DATABASE_URL, function(err, client) {
 	if (err) throw err;
@@ -37,6 +38,7 @@ process.on('SIGTERM', function() {
 		});
 	});
 });
+*/
 
 var app = express();
 app.use(express.static(__dirname + '/client'));
