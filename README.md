@@ -1,4 +1,7 @@
 # Public Record
+
+Check out the paper [here](https://github.com/nonphoto/public-record/blob/master/writeup/writeup.pdf).
+
 ## For the record...
 
 The server runs on [Node.js](https://nodejs.org/en/download/). It requires the `express` and `ws` modules to run. You can install them by navigating to the project directory and running
